@@ -1,3 +1,4 @@
+import kmp_matcher from 'kmp-matcher';
 import React, { useEffect, useState } from 'react';
 import { Document, Page, pdfjs } from 'react-pdf';
 
@@ -7,6 +8,7 @@ pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/$
 const PDFReader = ({ ebookFile, setSearches, transcription, searches, setAllDone, allDone, pdfText, setPdfText }) => {
     const [numPages, setNumPages] = useState(null);
     const [textInfo, setTextInfo] = useState([])
+    const [orignalText, setOrignalText] = useState('')
 
     const onDocumentLoadSuccess = ({ numPages }) => {
         setNumPages(numPages);
@@ -15,6 +17,7 @@ const PDFReader = ({ ebookFile, setSearches, transcription, searches, setAllDone
 
     const extractText = async (pageIndex, page) => {
         const textContent = await page.getTextContent();
+        // console.log(textContent)
         const textItems = textContent.items.map(item => {
             const { transform, str } = item;
             const x = transform[4];
@@ -25,7 +28,6 @@ const PDFReader = ({ ebookFile, setSearches, transcription, searches, setAllDone
             };
         });
         setTextInfo((prev) => [...prev, textItems])
-
         const pageText = textItems.flatMap((item) => item.text).join('');
         setPdfText(prevPdfText => [
             ...prevPdfText,
@@ -34,87 +36,45 @@ const PDFReader = ({ ebookFile, setSearches, transcription, searches, setAllDone
                 textInfo: pageText,
             }
         ]);
-
-        // Extract search term occurrences
-        const searchTermOccurrences = [];
-        const searchTerm = 'Sohaib'; // Replace with the actual search term
-        const regex = new RegExp(`(\\b${searchTerm}\\b)`, 'gi');
-        const highlightedPageText = pageText.replace(regex, (match) => {
-            const startIndex = pageText.indexOf(match);
-            const endIndex = startIndex + match.length;
-            searchTermOccurrences.push({
-                startIndex,
-                endIndex,
-                text: match,
-            });
-            return `<span class="bg-yellow-200">${match}</span>`;
-        });
-        setPdfText(prevPdfText => [
-            ...prevPdfText,
-            {
-                page: pageIndex,
-                textInfo: highlightedPageText,
-            }
-        ]);
-
-        // Add occurrences to textInfo
-        setTextInfo((prev) => {
-            const newTextInfo = [...prev];
-            searchTermOccurrences.forEach((occurrence) => {
-                const { startIndex, endIndex, text } = occurrence;
-                newTextInfo[pageIndex - 1].push({
-                    text,
-                    location: {
-                        x: textItems[startIndex].location.x,
-                        y: textItems[startIndex].location.y,
-                    },
-                });
-            });
-            return newTextInfo;
-        });
-
+        // console.log(numPages, " ", pageIndex)
         if (pageIndex == numPages) {
             setAllDone(true)
             console.log(textInfo)
+
         }
     };
+    useEffect(() => {
+        const spans = document.getElementsByClassName('markedContent');
+        setOrignalText(spans)
+    }, [allDone]);
+
+    useEffect(() => {
+        while (true) {
+
+            Array.from(orignalText).forEach((s, i) => {
+                Array.from(s.getElementsByTagName('span')).forEach((ss, i) => {
+                    const newSpans = highlightSearchTerm(ss.innerText, "I am");
+                    ss.innerHTML = newSpans;
+                });
+            });
+            if (orignalText.length > 0) break
+        }
+    }, [orignalText])
 
     function highlightSearchTerm(text, searchTerm) {
-
-        const words = text.split(' ');
-        const highlightedWords = words.map(word => {
-            if (word.toLowerCase() === searchTerm.toLowerCase()) {
-                return `<span class="bg-yellow-200">${word}</span>`;
-            } else {
-                return word;
-            }
-        });
-        return highlightedWords.join(' ');
+        const start = kmp_matcher.kmp(text, searchTerm.trim())
+        const lenght = searchTerm.trim().length
+        if (start.length > 0) {
+            
+            const word = text.slice(start[0], start[0] + lenght);
+            const previousWords = text.slice(0, start[0])
+            const lastWords = text.slice(start[0] + lenght)
+            return `${previousWords}<span class="bg-yellow-200">${word}</span>${lastWords}`;
+        }
+        else {
+            return text
+        }
     }
-
-    // useEffect(() => {
-    //     console.log(transcription);
-    //     if (allDone && pdfText.length > 0) {
-    //         const allPageText = pdfText?.map((page) => page.text).join(' ');
-
-    //         const searchPromises = transcription.map(async (searchTerm) => {
-    //             console.log("searching....");
-    //             const result = await searchPDF(allPageText, searchTerm.text);
-    //             return result;
-    //         });
-
-    //         Promise.all(searchPromises)
-    //             .then(results => {
-    //                 setSearches((prev) => [...prev, ...results]);
-    //             })
-    //             .catch(error => {
-    //                 console.error("Error during search:", error);
-    //             });
-    //     }
-    // }, [transcription, allDone]);
-
-
-
 
     const searchPDF = async (pdfText, searchTerm) => {
         const searchResults = [];
@@ -191,20 +151,11 @@ const PDFReader = ({ ebookFile, setSearches, transcription, searches, setAllDone
                         }
                         if (j === 5 && lastWordIndexes.length === 0) {
                             j = 7;
-                            console.log(ender)
+
                             ender--;
                         }
                     }
 
-                    // for (let k = 5; k >= 3; k--) {
-                    //     const lastWords = searchTerm.split(' ').slice(-k).join(' ');
-                    //     const regex = new RegExp(`${firstWords}(\\S+\\s+){0,}(.*${lastWords})`, 'i');
-                    //     const matches = pdfText.slice(adjustedIndex).match(regex);
-
-                    //     if (matches?.length > 0) {
-                    //         searchResults.push(matches[0]);
-                    //     }
-                    // }
                 }
                 console.log(searchResults);
 
@@ -233,11 +184,13 @@ const PDFReader = ({ ebookFile, setSearches, transcription, searches, setAllDone
             >
                 {numPages && [...Array(numPages)].map((page, index) => (
                     <React.Fragment key={index}>
-                        <p>
-                            Page {index + 1} of {numPages}
-                            <div className='flex w-full justify-evenly'>
+                        <p className=' text-[#808080b1] select-none'>
+                            <div className='flex w-full gap-52 justify-evenly'>
+                                <span className='absolute'>
+                                    Page {index + 1} of {numPages}
+                                </span>
                                 <p>
-                                    Book Page Canvas
+                                    Book Pages Canvas
                                 </p>
                                 <p>
                                     Extracted text
@@ -248,7 +201,7 @@ const PDFReader = ({ ebookFile, setSearches, transcription, searches, setAllDone
                             pageNumber={index + 1}
                             renderAnnotationLayer={false}
                             onLoadSuccess={(page) => extractText(index + 1, page)}
-                            className={"flex gap-2 items-center justify-center md:flex-row flex-col text-xs shadow-md"}
+                            className={"flex gap-2 items-center absolute my-3 justify-center md:flex-row flex-col text-xs shadow-[2px_2px_11px_1px_#0000004a] "}
                         />
 
                     </React.Fragment>
