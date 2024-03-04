@@ -1,0 +1,29 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+input[type="number"] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+  margin: 0;
+  /* Remove the default margin */
+}
+
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+  /* Remove the default margin */
+}
+
+.textLayer {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  height: auto !important;
+  line-height: 1.1;
+  padding: 23px;
+  
+  /* text-align: center; */
+  
+}

@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+    <script>
+        const searchPDF = async (pdfText, searchTerm) => {
+            let searchTermLength = 5;
+
+            // Step 2: First Search
+            let results = await performSearch(pdfText, searchTerm, searchTermLength);
+
+            // Step 3: Iterative Searches
+            while (results.length === 0 && searchTermLength > 2) {
+                searchTermLength--;
+                const slicedTerm = searchTerm.slice(0, searchTermLength);
+
+                results = await performSearch(pdfText, slicedTerm, searchTermLength);
+            }
+
+            // Step 4: Sliced Search
+            if (results.length === 0) {
+                for (let i = 1; i <= searchTerm.length - 1; i++) {
+                    const slicedTerm = searchTerm.slice(i, i + searchTermLength);
+                    results = await performSearch(pdfText, slicedTerm, searchTermLength);
+                    if (results.length > 0) break;
+                }
+            }
+
+            // Continue with remaining steps...
+        };
+        // Steps for searching any specific portion or paragraph from the searchTerm which may be large:
+        // 1. Start by searching with the first 5 words, then decrement the number of words to 4, 3, and so on until the last 3 words.
+        // 2. If the search is unsuccessful with the first 3 words, slice the searchTerm from (1, 6) and repeat the process.
+        // 3. Continue searching with 5, 4, 3 words in the whole document. If still not found, search using the sliced searchTerm of (2, 7) and repeat with 5, 4, 3 words until the term is found.
+        // 4. If the searchTerm appears in certain pages (e.g., 1, 5, 10), search for the 5 ending words like (-5,). If not found, decrease the number of ending words to -4, -3, and so on within the selected pages.
+        // 5. If the term is not found in the selected pages, shift the sliced portion by using (-6, -1), then (-7, -2), and so on until found.
+
+        const performSearch = async (pdfText, searchTerm, searchTermLength) => {
+            const searchResults = [];
+
+
+            pdfText.map((page) => {
+                console.log(page.text.match(searchTerm))
+            })
+
+            return searchResults;
+        };
+        const pdfText = [
+            { page: 1, text: "For the specific use case you've described—aligning transcribed text from an audiobook with the corresponding text in an eBook—it might be more practical to perform the search functionality on the backend (Python/Flask) rather than the frontend (React.js). Here are a few reasons:" },
+            { page: 2, text: "However, it's essential to strike a balance and consider the user experience. If there are real-time requirements or if the user's interaction heavily relies on the frontend, you might need to explore a hybrid approach or optimize frontend interactions." },
+            { page: 3, text: "In summary, consider implementing the search functionality on the backend, especially if it involves significant computation or access to backend data. Frontend interactions can trigger backend requests to retrieve the relevant results." },
+            // Add more pages as needed
+        ];
+        // Call searchPDF with your PDF text and search term
+        searchPDF(pdfText, "react.js");
+
+    </script>
+</body>
+
+</html>
