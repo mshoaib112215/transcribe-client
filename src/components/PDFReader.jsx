@@ -1,5 +1,5 @@
 import kmp_matcher from 'kmp-matcher';
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Document, Page, pdfjs } from 'react-pdf';
 
 // Set worker URL for pdfjs
@@ -8,14 +8,14 @@ pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/$
 const PDFReader = ({ ebookFile, setSearches, transcription, searches, setAllDone, allDone, pdfText, setPdfText }) => {
     const [numPages, setNumPages] = useState(null);
     const [textInfo, setTextInfo] = useState([])
-    const [orignalText, setOrignalText] = useState('')
+    const [orignalText, setOrignalText] = useState(null);
 
     const onDocumentLoadSuccess = ({ numPages }) => {
         setNumPages(numPages);
         setAllDone(false)
     };
 
-    const extractText = async (pageIndex, page) => {
+    const extractText = useCallback(async (pageIndex, page) => {
         const textContent = await page.getTextContent();
         // console.log(textContent)
         const textItems = textContent.items.map(item => {
@@ -38,34 +38,42 @@ const PDFReader = ({ ebookFile, setSearches, transcription, searches, setAllDone
         ]);
         // console.log(numPages, " ", pageIndex)
         if (pageIndex == numPages) {
+
             setAllDone(true)
             console.log(textInfo)
 
         }
-    };
-    useEffect(() => {
-        const spans = document.getElementsByClassName('markedContent');
-        setOrignalText(spans)
-    }, [allDone]);
+    });
+    const orignalTextRef = useRef(null);
 
     useEffect(() => {
-        while (true) {
+        console.log(orignalText);
+       
+    }, [orignalText]);
 
-            Array.from(orignalText).forEach((s, i) => {
-                Array.from(s.getElementsByTagName('span')).forEach((ss, i) => {
-                    const newSpans = highlightSearchTerm(ss.innerText, "I am");
-                    ss.innerHTML = newSpans;
-                });
-            });
-            if (orignalText.length > 0) break
+    useEffect(() => {
+        if (allDone) {
+            setTimeout(() => {
+
+                orignalTextRef.current = document.getElementsByClassName("markedContent");
+                // setOrignalText(orignalTextRef);
+                if (orignalTextRef.current) {
+                    Array.from(orignalTextRef.current).forEach((s, i) => {
+                        Array.from(s.getElementsByTagName("span")).forEach((ss, i) => {
+                            const newSpans = highlightSearchTerm(ss.innerText, `other, Peter Grant, who, though not a `);
+                            ss.innerHTML = newSpans;
+                        });
+                    });
+                }
+            }, 100);
         }
-    }, [orignalText])
+    }, [allDone]);
 
     function highlightSearchTerm(text, searchTerm) {
         const start = kmp_matcher.kmp(text, searchTerm.trim())
         const lenght = searchTerm.trim().length
         if (start.length > 0) {
-            
+
             const word = text.slice(start[0], start[0] + lenght);
             const previousWords = text.slice(0, start[0])
             const lastWords = text.slice(start[0] + lenght)

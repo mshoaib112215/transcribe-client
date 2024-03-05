@@ -29,52 +29,52 @@ function Home() {
   const [isCaputed, setIsCaputed] = useState(false);
   const [data, setData] = useState([]);
 
-  // const socketURL = "http://127.0.0.1:5111"
-  const socketURL = "http://13.51.205.166:5111"
+  const socketURL = "http://127.0.0.1:5111"
+  // const socketURL = "http://13.51.205.166:5111"
 
   useEffect(() => {// Establish socket connection
 
-    // const newSocket = io(socketURL, { reconnection: true });
+    const newSocket = io(socketURL, { reconnection: true });
 
 
-    // // Event listener for 'connect' event
-    // newSocket.on('connect', () => {
-    //   // toast.success('Connected to server');
-    // });
+    // Event listener for 'connect' event
+    newSocket.on('connect', () => {
+      // toast.success('Connected to server');
+    });
 
-    // // Event listener for 'connect_error' event
-    // newSocket.on('connect_error', () => {
-    //   toast.error('Error connecting to server, retrying in 3 seconds...');
-    // });
+    // Event listener for 'connect_error' event
+    newSocket.on('connect_error', () => {
+      toast.error('Error connecting to server, retrying in 3 seconds...');
+    });
 
-    // // Event listener for 'disconnect' event
-    // newSocket.on('disconnect', () => {
-    //   toast.warning('Disconnected from server');
-    // });
+    // Event listener for 'disconnect' event
+    newSocket.on('disconnect', () => {
+      toast.warning('Disconnected from server');
+    });
 
-    // // Event listener for 'message' event
-    // const handleMessage = (data) => {
-    //   console.log(data);
-    //   // setTranscription((prev) => [...prev, updatedTranscription]);
-    // };
+    // Event listener for 'message' event
+    const handleMessage = (data) => {
+      console.log(data);
+      // setTranscription((prev) => [...prev, updatedTranscription]);
+    };
 
-    // newSocket.on('message', handleMessage);
+    newSocket.on('message', handleMessage);
 
-    // // Event listener for 'transcription_update' event
-    // const handleTranscriptionUpdate = (data) => {
-    //   const updatedTranscription = data.transcription;
-    //   console.log(data)
-    //   setTranscription((prev) => [...prev, updatedTranscription]);
-    // };
+    // Event listener for 'transcription_update' event
+    const handleTranscriptionUpdate = (data) => {
+      const updatedTranscription = data.transcription;
+      console.log(data)
+      setTranscription((prev) => [...prev, updatedTranscription]);
+    };
 
-    // newSocket.on('transcription_update', handleTranscriptionUpdate);
+    newSocket.on('transcription_update', handleTranscriptionUpdate);
 
-    // // Cleanup when the component is unmounted
-    // return () => {
-    //   newSocket.disconnect();
-    //   newSocket.off('message', handleTranscriptionUpdate);
-    //   newSocket.off('transcription_update', handleTranscriptionUpdate);
-    // };
+    // Cleanup when the component is unmounted
+    return () => {
+      newSocket.disconnect();
+      newSocket.off('message', handleTranscriptionUpdate);
+      newSocket.off('transcription_update', handleTranscriptionUpdate);
+    };
   }, []);
 
   useEffect(() => {
@@ -101,7 +101,7 @@ function Home() {
 
   useEffect(() => {
     if (allDone && pdfText.length > 0) {
-      console.log("all done", pdfText);
+     
       const allPageText = pdfText?.map((page) => page.text).join(' ');
       if (transcription.length > 0) {
         // Map each transcription to a search promise
