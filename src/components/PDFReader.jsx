@@ -1,11 +1,12 @@
 import kmp_matcher from 'kmp-matcher';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Document, Page, pdfjs } from 'react-pdf';
+import { toast } from 'react-toastify';
 
 // Set worker URL for pdfjs
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
 
-const PDFReader = ({ ebookFile, setSearches, transcription, searches, setAllDone, allDone, pdfText, setPdfText }) => {
+const PDFReader = ({ ebookFile, setSearches, transcription, searches, setAllDone, allDone, pdfText, setPdfText, segmentsText }) => {
     const [numPages, setNumPages] = useState(null);
     const [textInfo, setTextInfo] = useState([])
     const [orignalText, setOrignalText] = useState(null);
@@ -46,28 +47,30 @@ const PDFReader = ({ ebookFile, setSearches, transcription, searches, setAllDone
     });
     const orignalTextRef = useRef(null);
 
-    useEffect(() => {
-        console.log(orignalText);
-       
-    }, [orignalText]);
+
 
     useEffect(() => {
         if (allDone) {
-            setTimeout(() => {
+            // setTimeout(() => {
 
-                orignalTextRef.current = document.getElementsByClassName("markedContent");
-                // setOrignalText(orignalTextRef);
-                if (orignalTextRef.current) {
-                    Array.from(orignalTextRef.current).forEach((s, i) => {
-                        Array.from(s.getElementsByTagName("span")).forEach((ss, i) => {
-                            const newSpans = highlightSearchTerm(ss.innerText, `other, Peter Grant, who, though not a `);
-                            ss.innerHTML = newSpans;
-                        });
-                    });
-                }
-            }, 100);
+            //     orignalTextRef.current = document.getElementsByClassName("markedContent");
+            //     // setOrignalText(orignalTextRef);
+            //     if (orignalTextRef.current) {
+            //         Array.from(orignalTextRef.current).forEach((s, i) => {
+            //             Array.from(s.getElementsByTagName("span")).forEach((ss, i) => {
+            //                 const newSpans = highlightSearchTerm(ss.innerText, `Rockwell `);
+            //                 ss.innerHTML = newSpans;
+            //             });
+            //         });
+            //     }
+            // }, 100);
+            
         }
-    }, [allDone]);
+        else if (Array.from(segmentsText).length != 0) {
+
+            toast.error('Still loading eBook!');
+        }
+    }, [segmentsText]);
 
     function highlightSearchTerm(text, searchTerm) {
         const start = kmp_matcher.kmp(text, searchTerm.trim())

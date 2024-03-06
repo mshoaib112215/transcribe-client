@@ -32,51 +32,54 @@ function Home() {
   const socketURL = "http://127.0.0.1:5111"
   // const socketURL = "http://13.51.205.166:5111"
 
+  const [newSocket, setNewSocket] = useState(null)
   useEffect(() => {// Establish socket connection
-
-    const newSocket = io(socketURL, { reconnection: true });
-
-
-    // Event listener for 'connect' event
-    newSocket.on('connect', () => {
-      // toast.success('Connected to server');
-    });
-
-    // Event listener for 'connect_error' event
-    newSocket.on('connect_error', () => {
-      toast.error('Error connecting to server, retrying in 3 seconds...');
-    });
-
-    // Event listener for 'disconnect' event
-    newSocket.on('disconnect', () => {
-      toast.warning('Disconnected from server');
-    });
-
-    // Event listener for 'message' event
-    const handleMessage = (data) => {
-      console.log(data);
-      // setTranscription((prev) => [...prev, updatedTranscription]);
-    };
-
-    newSocket.on('message', handleMessage);
-
-    // Event listener for 'transcription_update' event
-    const handleTranscriptionUpdate = (data) => {
-      const updatedTranscription = data.transcription;
-      console.log(data)
-      setTranscription((prev) => [...prev, updatedTranscription]);
-    };
-
-    newSocket.on('transcription_update', handleTranscriptionUpdate);
-
-    // Cleanup when the component is unmounted
-    return () => {
-      newSocket.disconnect();
-      newSocket.off('message', handleTranscriptionUpdate);
-      newSocket.off('transcription_update', handleTranscriptionUpdate);
-    };
+    setNewSocket(io(socketURL, { reconnection: true }))
   }, []);
 
+  useEffect(() => {
+    // Event listener for 'connect' event
+    if (newSocket) {
+
+      newSocket.on('connect', () => {
+        toast.success('Connected to server');
+      });
+      // Event listener for 'connect_error' event
+      newSocket.on('connect_error', () => {
+        toast.error('Error connecting to server, retrying in 3 seconds...');
+      });
+
+      // Event listener for 'disconnect' event
+      newSocket.on('disconnect', () => {
+        toast.warning('Disconnected from server');
+      });
+
+      // Event listener for 'message' event
+      const handleMessage = (data) => {
+        console.log(data);
+        // setTranscription((prev) => [...prev, updatedTranscription]);
+      };
+
+      newSocket.on('message', handleMessage);
+
+      // Event listener for 'transcription_update' event
+      const handleTranscriptionUpdate = (data) => {
+        const updatedTranscription = data.transcription;
+        console.log(data)
+        setTranscription((prev) => [...prev, updatedTranscription]);
+      };
+
+      newSocket.on('transcription_update', handleTranscriptionUpdate);
+
+      // Cleanup when the component is unmounted
+      return () => {
+        // newSocket.disconnect();
+        newSocket.off('message', handleTranscriptionUpdate);
+        newSocket.off('transcription_update', handleTranscriptionUpdate);
+      };
+    }
+
+  }, [newSocket])
   useEffect(() => {
     if (audioFile) {
       const audio = new Audio(URL.createObjectURL(audioFile));
@@ -101,7 +104,7 @@ function Home() {
 
   useEffect(() => {
     if (allDone && pdfText.length > 0) {
-     
+
       const allPageText = pdfText?.map((page) => page.text).join(' ');
       if (transcription.length > 0) {
         // Map each transcription to a search promise
@@ -264,6 +267,7 @@ function Home() {
   const handleRadioChange = (event) => {
     setTimeStampsType(event.target.id);
   };
+
   const transcribe = async () => {
     if (audioFile) {
       if (timeStamps.length === 0) {
@@ -442,6 +446,7 @@ function Home() {
           />
 
           <button type="button" onClick={() => transcribe()} className="bg-blue-500 text-white py-2 px-4 rounded">Transcribe audio</button>
+
 
         </form>
         <PDFReader ebookFile={ebookFile} setSearches={setSearches} searches={searches} transcription={transcription} allDone={allDone} setAllDone={setAllDone} pdfText={pdfText} setPdfText={setPdfText} />

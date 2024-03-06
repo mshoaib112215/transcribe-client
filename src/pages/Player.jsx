@@ -10,8 +10,9 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { Link } from "react-router-dom"
 import PDFReader from "../components/PDFReader";
+import MemorizedAudioPlayer from "../components/MemorizedAudioPlayer";
 
-function Player({ newSocket }) {
+function Player() {
 
     const [audioFile, setAudioFile] = useState(null);
     const [timestampsFile, setTimestampsFile] = useState(null);
@@ -30,58 +31,51 @@ function Player({ newSocket }) {
     const [currentTimes, setCurrentTimes] = useState([]);
     const [isCaputed, setIsCaputed] = useState(false);
     const [data, setData] = useState([]);
+    const [segmentsText, setSegmentsText] = useState([]);
 
-    // const socketURL = "http://127.0.0.1:5111"
-    const socketURL = "http://13.51.205.166:5111"
+    const socketURL = "http://127.0.0.1:5111"
+    // const socketURL = "http://13.51.205.166:5111"
 
 
     const capture = document.getElementById('capture')
-    const load = document.getElementById('load')
-    load && (load.disabled = true)
-    const capturedTimestamps = document.getElementById('capturedTimestamps')
 
-    capture && (capture.disabled = true) && (capturedTimestamps.innerHTML = "Nothing Captured");
-    var currentTime = 0;
-    var capturedTimeStamps = [];
+
+    const capturedTimestamps = document.getElementById('capturedTimestamps')
+    // capture && (capture.disabled = true) && (capturedTimestamps.innerHTML = "Nothing Captured");
+
+    // var currentTime = 0;
+    // const [currentTime, setCurrentTime] = useState(0);
+    let currentTime = 0;
+    const [capturedTimeStamps, setCapturedTimeStamps] = useState([]);
+    const [counter, setCounter] = useState(1)
+    var seekedTime = 0;
+
+    // var capturedTimeStamps = [];
 
     const audioPlayerRef = useRef(null);
     const currentTimeRef = useRef(0);
 
     const handleTimeUpdate = (time) => {
-        currentTimeRef.current = time;
-        currentTime = time;
+        // setCurrentTime(time);
+        currentTime = time
+        // console.log(time)
+        // setCurrentTime(timeFormator(time));
+    };
+    const handleSeeked = (time) => {
+        console.log(currentTimeRef.current)
+        seekedTime = time;
+        console.log(time)
         // setCurrentTimes((prev) => [...prev, time])
     };
     const captureTimestamp = () => {
-        load.disabled = false
-
-        console.log(currentTime)
-        capturedTimestamps.innerHTML = ""
-        capturedTimeStamps.push(currentTime);
-        capturedTimeStamps.map((t, i) => {
-            if (t !== undefined) {
-
-                const li = document.createElement('li')
-                li.innerHTML = timeFormator(t)
-                capturedTimestamps.appendChild(li)
-            }
-            // capturedTimestamps.appendChild(`<li key = ${i}>${timeFormator(t)}</li>`)
-        })
-        // time caluculator form second to HH:MM:SS
-        currentTime = timeFormator(currentTime)
+        setCapturedTimeStamps((prev) => [...prev, currentTime]);
         toast.success(currentTime + " Added in the timestamps list")
     }
-    const showTimestamps = () => {
-        console.log(capturedTimeStamps)
+    useEffect(() => {
         setTimeStamps((prev) => [...capturedTimeStamps]);
         setIsCaputed(true)
+    }, [capturedTimeStamps])
 
-    }
-    useEffect(() => {
-
-        console.log(timeStamps)
-
-    }, [timeStamps])
     const handlePlaying = () => {
         capture.disabled = false
     }
@@ -98,52 +92,74 @@ function Player({ newSocket }) {
             toast.error("Error will converting time " + er + time)
         }
     }
-    useEffect(() => {
-        // Establish socket connection
-        const newSocket = io(socketURL, { reconnection: true });
-
-
-        // Event listener for 'connect' event
-        newSocket.on('connect', () => {
-            // toast.success('Connected to server');
-        });
-
-        // Event listener for 'connect_error' event
-        newSocket.on('connect_error', () => {
-            toast.error('Error connecting to server, retrying in 3 seconds...');
-        });
-
-        // Event listener for 'disconnect' event
-        newSocket.on('disconnect', () => {
-            toast.warning('Disconnected from server');
-        });
-
-        // Event listener for 'message' event
-        const handleMessage = (data) => {
-            console.log(data);
-            // setTranscription((prev) => [...prev, data.message]);
-
-        }
-        newSocket.on('message', handleMessage);
-
-        // Event listener for 'transcription_update' event
-        const handleTranscriptionUpdate = (data) => {
-            const updatedTranscription = data.transcription;
-            console.log(data)
-            setTranscription((prev) => [...prev, updatedTranscription]);
-        };
-
-        newSocket.on('transcription_update', handleTranscriptionUpdate);
-
-
-        // Cleanup when the component is unmounted
-        return () => {
-            newSocket.disconnect();
-            newSocket.off('message', handleTranscriptionUpdate);
-            newSocket.off('transcription_update', handleTranscriptionUpdate);
-        };
-
+    const [newSocket, setNewSocket] = useState(null)
+    useEffect(() => {// Establish socket connection
+        setNewSocket(io(socketURL, { reconnection: true }))
     }, []);
+    const audioData = useMemo(() => {
+        return audioFile != null ? URL.createObjectURL(audioFile) : null;
+    }, [audioFile]);
+    useEffect(() => {
+        // Event listener for 'connect' event
+        if (newSocket) {
+
+            newSocket.on('connect', () => {
+                toast.success('Connected to server');
+            });
+            // Event listener for 'connect_error' event
+            newSocket.on('connect_error', () => {
+                toast.error('Error connecting to server, retrying in 3 seconds...');
+            });
+
+            // Event listener for 'disconnect' event
+            newSocket.on('disconnect', () => {
+                toast.warning('Disconnected from server');
+            });
+
+            // Event listener for 'message' event
+            const handleMessage = (data) => {
+                // setTranscription((prev) => [...prev, updatedTranscription]);
+            };
+
+            newSocket.on('message', handleMessage);
+
+            // Event listener for 'transcription_update' event
+            const handleTranscriptionUpdate = (data) => {
+                const updatedTranscription = data.transcription;
+                console.log(data)
+                setTranscription((prev) => [...prev, updatedTranscription]);
+            };
+
+            newSocket.on('transcription_update', handleTranscriptionUpdate);
+
+            newSocket.on('scroll_update', (data) => {
+                const { current_time, result } = data;
+
+                setSegmentsText(prevState => {
+                    const isNew = !prevState.some(prev => prev.current_time === current_time);
+                    if (isNew) {
+                        return [...prevState, result]
+
+                    }
+                    else {
+                        return prevState
+                    }
+                });
+
+            });
+
+            // Cleanup when the component is unmounted
+            return () => {
+                // newSocket.disconnect();
+                newSocket.off('message', handleTranscriptionUpdate);
+                newSocket.off('transcription_update', handleTranscriptionUpdate);
+            };
+        }
+
+    }, [newSocket])
+    useEffect(() => {
+        console.log(segmentsText)
+    }, [segmentsText])
 
     useEffect(() => {
         if (audioFile) {
@@ -190,7 +206,17 @@ function Player({ newSocket }) {
         }
     }, [transcription, allDone, pdfText]);
 
-
+    const scrollToText = async () => {
+        console.log(newSocket)
+        let time = currentTime
+        setCounter(1)
+        setSegmentsText([])
+        newSocket.emit('scroll-to-text', {
+            current_time: time,
+            audio_duration: audioDuration,
+            file_name: audioFile.name
+        });
+    }
     const searchPDF = async (pdfText, searchTerm) => {
         const searchResults = [];
         let starter = 0;
@@ -370,7 +396,7 @@ function Player({ newSocket }) {
                 if (response.exists) {
                     toast.info("Audio file already exists, let's start transcription...")
                 }
-                else{
+                else {
                     toast.info("Audio file isn't exist, uploading...")
                     formData.append('file', audioFile);
 
@@ -485,19 +511,18 @@ function Player({ newSocket }) {
 
                     <FileInput acceptedFileTypes=".pdf" label="Upload ebook File" handleFileChange={handleEbookFileChange} />
                     {/* <xpdfTextExtractor PdfViewer={ebookFile} /> */}
-                    <PDFReader ebookFile={ebookFile} setSearches={setSearches} searches={searches} transcription={transcription} allDone={allDone} setAllDone={setAllDone} pdfText={pdfText} setPdfText={setPdfText} />
                     <AudioPlayer
                         ref={audioPlayerRef}
-                        src={audioFile != null && URL.createObjectURL(audioFile)}
+                        src={audioData}
                         controls={true}
-                        listenInterval={500}
+                        listenInterval={100}
                         showJumpControls={false}
                         customAdditionalControls={[]}
                         onListen={handleTimeUpdate}
-
+                        onSeeked={handleSeeked}
                         time={currentTime}
-                        onPlay={() => handlePlaying()}
-                        onPause={() => handlePause()}
+                        onPlay={handlePlaying}
+                        onPause={handlePause}
                         style={{ width: '100%' }}
                         customProgressBarSection={[
                             <div>
@@ -511,9 +536,10 @@ function Player({ newSocket }) {
                             </div>,
                         ]}
                     />
-
+                    {/* <MemorizedAudioPlayer audioFile={audioFile} handlePause  = {handlePause} handlePlaying = {handlePlaying} handleSeeked = {handleSeeked} handleTimeUpdate = {handleTimeUpdate} /> */}
+                    <button type="button" onClick={() => scrollToText()} className="bg-blue-500 text-white py-2 px-4 rounded">Scroll To Text</button>
                     <button type="button" id="capture" className="bg-blue-500 disabled:bg-blue-300 disabled:cursor-not-allowed text-white py-2 px-4 rounded" onClick={() => captureTimestamp()}>Capture Timestamp</button>
-                    <button type="button" id="load" className="bg-blue-500 disabled:bg-blue-300 disabled:cursor-not-allowed text-white py-2 px-4 rounded" onClick={() => showTimestamps()}>Load Captured Timestamps</button>
+                    {/* <button type="button" id="load" className="bg-blue-500 disabled:bg-blue-300 disabled:cursor-not-allowed text-white py-2 px-4 rounded" onClick={() => showTimestamps()}>Load Captured Timestamps</button> */}
 
                     <ol id="capturedTimestamps" className="list-decimal flex items-center flex-col">
 
@@ -522,9 +548,11 @@ function Player({ newSocket }) {
                     <button type="button" className="bg-blue-500 text-white py-2 px-4 rounded" onClick={() => { setTimeStamps([]); setData([]); setTranscription([]); setSearches([]); setTimestampsFile(null); document.getElementById("timestamps-file").value = null; setIsCaputed(false) }}>Clear Data Table</button>
 
                 </form>
+                <PDFReader ebookFile={ebookFile} setSearches={setSearches} searches={searches} transcription={transcription} allDone={allDone} setAllDone={setAllDone} pdfText={pdfText} setPdfText={setPdfText} segmentsText={segmentsText} />
 
                 {/* <ToastContainer /> */}
             </div>
+
             <TimestampsFileInput handleFileChange={handleTimestampsFileChange} timestampsFile={timestampsFile} setTimeStamps={setTimeStamps} transcription={transcription} searches={searches} setData={setData} data={data} timeStamps={timeStamps} setIsCaputed={setIsCaputed} isCaputed={isCaputed} />
         </>
 
