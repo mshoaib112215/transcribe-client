@@ -6,8 +6,7 @@ import { toast } from 'react-toastify';
 // Set worker URL for pdfjs
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
 
-const PDFReader = ({ ebookFile, setSearches, transcription, searches, setAllDone, allDone, pdfText, setPdfText, segmentsText }) => {
-    const [numPages, setNumPages] = useState(null);
+const PDFReader = ({ ebookFile, setSearches, transcription, searches, setAllDone, allDone, pdfText, setPdfText, segmentsText, playing, setNumPages, numPages }) => {
     const [textInfo, setTextInfo] = useState([])
     const [orignalText, setOrignalText] = useState(null);
 
@@ -41,7 +40,6 @@ const PDFReader = ({ ebookFile, setSearches, transcription, searches, setAllDone
         if (pageIndex == numPages) {
 
             setAllDone(true)
-            console.log(textInfo)
 
         }
     });
@@ -64,7 +62,26 @@ const PDFReader = ({ ebookFile, setSearches, transcription, searches, setAllDone
             //         });
             //     }
             // }, 100);
-            
+            // segmentsText.map((obj) => {
+            //     const current_time = obj.current_time
+            //     obj?.text?.segments.forEach((seg) => {
+            //         console.log(seg.start + current_time )
+            //         console.log(seg.end + current_time )
+
+            //         // orignalTextRef.current = document.getElementsByClassName("markedContent");
+
+            //         // setOrignalText(orignalTextRef);
+            //         // if (orignalTextRef.current) {
+            //         //     Array.from(orignalTextRef.current).forEach((s, i) => {
+            //         //         Array.from(s.getElementsByTagName("span")).forEach((ss, i) => {
+            //         //             const newSpans = highlightSearchTerm(ss.innerText, `Rockwell `);
+            //         //             ss.innerHTML = newSpans;
+            //         //         });
+            //         //     });
+            //         // }
+            //     })
+            // })
+
         }
         else if (Array.from(segmentsText).length != 0) {
 
@@ -72,20 +89,32 @@ const PDFReader = ({ ebookFile, setSearches, transcription, searches, setAllDone
         }
     }, [segmentsText]);
 
-    function highlightSearchTerm(text, searchTerm) {
-        const start = kmp_matcher.kmp(text, searchTerm.trim())
-        const lenght = searchTerm.trim().length
-        if (start.length > 0) {
+    // useEffect(() => {
+    //     if (playing != 0) {
+    //         // console.log(playing)
+    //         segmentsText && segmentsText?.map((obj) => {
+    //             const current_time = obj.current_time
+    //             obj?.text?.segments.forEach((seg) => {
+    //                 console.log(seg.start + current_time)
+    //                 console.log(seg.end + current_time)
 
-            const word = text.slice(start[0], start[0] + lenght);
-            const previousWords = text.slice(0, start[0])
-            const lastWords = text.slice(start[0] + lenght)
-            return `${previousWords}<span class="bg-yellow-200">${word}</span>${lastWords}`;
-        }
-        else {
-            return text
-        }
-    }
+    //                 // orignalTextRef.current = document.getElementsByClassName("markedContent");
+
+    //                 // setOrignalText(orignalTextRef);
+    //                 // if (orignalTextRef.current) {
+    //                 //     Array.from(orignalTextRef.current).forEach((s, i) => {
+    //                 //         Array.from(s.getElementsByTagName("span")).forEach((ss, i) => {
+    //                 //             const newSpans = highlightSearchTerm(ss.innerText, `Rockwell `);
+    //                 //             ss.innerHTML = newSpans;
+    //                 //         });
+    //                 //     });
+    //                 // }
+    //             })
+    //         })
+    //     }
+    // }, [playing])
+
+
 
     const searchPDF = async (pdfText, searchTerm) => {
         const searchResults = [];
