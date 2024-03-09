@@ -35,8 +35,8 @@ function Player() {
     const [numPages, setNumPages] = useState(null);
     const [newSocket, setNewSocket] = useState(null);
     const [playing, setPlaying] = useState(false)
-    const socketURL = "http://127.0.0.1:5111"
-    // const socketURL = "http://16.171.42.93:5111"
+    // const socketURL = "http://127.0.0.1:5111"
+    const socketURL = "http://16.171.42.93:5111"
 
     let currentTime = 0;
     const [capturedTimeStamps, setCapturedTimeStamps] = useState([]);
