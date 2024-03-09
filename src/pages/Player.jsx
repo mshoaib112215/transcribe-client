@@ -35,25 +35,24 @@ function Player() {
     const [numPages, setNumPages] = useState(null);
     const [newSocket, setNewSocket] = useState(null);
     const [playing, setPlaying] = useState(false)
-    const socketURL = "http://16.171.42.93:5111"
+    const socketURL = "http://127.0.0.1:5111"
+    // const socketURL = "http://16.171.42.93:5111"
 
     let currentTime = 0;
     const [capturedTimeStamps, setCapturedTimeStamps] = useState([]);
-    const [counter, setCounter] = useState(1)
     var seekedTime = 0;
 
     const audioPlayerRef = useRef(null);
     const orignalTextRef = useRef(null);
     const currentTimeRef = useRef(0);
     let battleSize = 5;
-    let startPage = 1;
+    let startPage = 1; 
     let endPage = battleSize;
     let processedSeg = useMemo(() => [], []);
+    currentTime = audioPlayerRef && audioPlayerRef?.current?.audioEl.current.currentTime
     const handleTimeUpdate = useCallback((time) => {
-        currentTime = time;
-
+        
         if (!segmentsText || segmentsText.length === 0) return;
-
         for (const obj of segmentsText) {
             const current_time = obj.current_time;
             const relevantSegment = obj?.result?.segments.find(({ start, end }) =>
@@ -114,9 +113,9 @@ function Player() {
                     }
                 }
             }
-            else{
-                audiofile && toast.info("Still server processing on it, again submit Highlight text request to get the result forcefully");
-                audioPlayerRef.current.audioEl.current.pause();
+            else {
+                // audioFile && toast.info("Still server processing on it, again submit Highlight text request to get the result forcefully");
+                // audioPlayerRef.current.audioEl.current.pause();
             }
         }
 
@@ -162,7 +161,7 @@ function Player() {
     }, []);
 
     const captureTimestamp = useCallback(() => {
-        setCapturedTimeStamps((prev) => [...prev, currentTime]);
+        setCapturedTimeStamps((prev) => [...prev, audioPlayerRef.current.audioEl.current.currentTime]);
         toast.success(currentTime + " Added in the timestamps list");
     }, [currentTime]);
 
@@ -181,17 +180,84 @@ function Player() {
         setPlaying(false)
     }, []);
 
+    const scropScrolling = useCallback(async () => {
+        const res = await fetch(socketURL + "/stop-scroll", {
+            method: "POST"    
+        })
+        const result = await res.json()
+        if (result.status == 200){
+            toast.success('process stoped')
+        }
+        else{
+            toast.error('Internal server error')
+
+        }
+    })
     const scrollToText = useCallback(async () => {
-        setCounter(1);
 
+        const formData = new FormData();
+        formData.append('file', audioFile);
 
-        audioPlayerRef.current.audioEl.current.pause();
-        newSocket.emit('scroll-to-text', {
-            current_time: currentTime,
-            audio_duration: audioDuration,
-            file_name: audioFile.name
-        });
-        toast.success(`Processing... We'll play audio once get response from server`);
+        const checkFileFormData = new FormData();
+        checkFileFormData.append('fileName', audioFile.name);
+
+        const checkFileRes = await toast.promise(
+            fetch(socketURL + "/is-audio-exists",
+                {
+                    method: "POST",
+                    body: checkFileFormData
+                }
+            ),
+            {
+                pending: 'Checking if audio file exists...',
+                success: 'Checking successful!',
+                error: 'Checking failed!'
+            }
+        );
+        const response = await checkFileRes.json()
+        if (response.exists) {
+            toast.info("Audio file already exists, let's start transcription...")
+
+            audioPlayerRef.current.audioEl.current.pause();
+            newSocket.emit('scroll-to-text', {
+                current_time: audioPlayerRef.current.audioEl.current.currentTime,
+                audio_duration: audioDuration,
+                file_name: audioFile.name
+            });
+            toast.success(`Processing... We'll play audio once get response from server`);
+        }
+        else {
+            toast.info("Audio file isn't exist, uploading...")
+            const uploadingToast = await toast.promise(
+                fetch(socketURL + "/store-audio", {
+                    method: "POST",
+                    body: formData
+                })
+                ,
+                {
+                    pending: 'Uploading...',
+                    success: 'processing completed!',
+                    error: 'Upload failed!'
+                }
+
+            )
+            const res = uploadingToast.json();
+            console.log(uploadingToast)
+            if (res.status === 200) {
+                toast.success("Audio file uploaded successfully")
+
+                audioPlayerRef.current.audioEl.current.pause();
+                newSocket.emit('scroll-to-text', {
+                    current_time: currentTime,
+                    audio_duration: audioDuration,
+                    file_name: audioFile.name
+                });
+                toast.success(`Processing... We'll play audio once get response from server`);
+            }
+            else {
+                toast.error("Failed to upload audio file")
+            }
+        }
     }, [currentTime, audioDuration, audioFile]);
 
     const audioData = useMemo(() => {
@@ -546,11 +612,11 @@ function Player() {
                     </div>
 
                     <FileInput acceptedFileTypes=".pdf" label="Upload ebook File" handleFileChange={handleEbookFileChange} />
-                    <button type="button" onClick={() => scrollToHighlight()} className="bg-blue-500 text-white py-2 px-4 rounded">Scroll to highlight</button>
-
 
 
                 </form>
+                <button type="button" onClick={() => scrollToHighlight()} className="bg-blue-500 text-white py-2 px-4 rounded sticky top-3 max-w-md w-full">Scroll to highlight</button>
+
                 <AudioPlayer
                     ref={audioPlayerRef}
                     src={audioData}
@@ -562,7 +628,7 @@ function Player() {
                     onSeeked={handleSeeked}
                     onPlay={handlePlaying}
                     onPause={handlePause}
-                    className="sticky top-3 max-w-md"
+                    className="sticky top-14 max-w-md"
                     style={{ width: '100%' }}
                     customProgressBarSection={[
                         <div>
@@ -578,8 +644,9 @@ function Player() {
                 />
                 <div className="max-w-md flex flex-col  gap-3 w-full">
 
-                    <button type="button" disabled={!playing} onClick={() => scrollToText()} className="bg-blue-500 text-white py-2 px-4 rounded w-full disabled:bg-blue-300 disabled:cursor-not-allowed">Scroll To Text</button>
-                    <button type="button" disabled={!playing} className="bg-blue-500 disabled:bg-blue-300 disabled:cursor-not-allowed text-white py-2 px-4 rounded" onClick={() => captureTimestamp()}>Capture Timestamp</button>
+                    <button type="button"  onClick={() => scrollToText()} className="bg-blue-500 text-white py-2 px-4 rounded w-full disabled:bg-blue-300 disabled:cursor-not-allowed">Start scrolling process</button>
+                    <button type="button"  onClick={() => scropScrolling()} className="bg-blue-500 text-white py-2 px-4 rounded w-full disabled:bg-blue-300 disabled:cursor-not-allowed">Stop server for scrolling process</button>
+                    <button type="button" className="bg-blue-500 disabled:bg-blue-300 disabled:cursor-not-allowed text-white py-2 px-4 rounded" onClick={() => captureTimestamp()}>Capture Timestamp</button>
                     <button type="button" className="bg-blue-500 text-white py-2 px-4 rounded w-full" onClick={() => { setTimeStamps([]); setData([]); setTranscription([]); setSearches([]); setTimestampsFile(null); document.getElementById("timestamps-file").value = null; setIsCaputed(false) }}>Clear Data Table</button>
                 </div>
                 <PDFReader ebookFile={ebookFile} setSearches={setSearches} searches={searches} transcription={transcription} allDone={allDone} setAllDone={setAllDone} pdfText={pdfText} setPdfText={setPdfText} segmentsText={segmentsText} setNumPages={setNumPages} numPages={numPages} />

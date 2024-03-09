@@ -87,7 +87,7 @@ const PDFReader = ({ ebookFile, setSearches, transcription, searches, setAllDone
         }
         else if (Array.from(segmentsText).length != 0) {
 
-            toast.error('Still loading eBook!');
+            // toast.error('Still loading eBook!');
         }
     }, [segmentsText]);
 
@@ -250,7 +250,7 @@ const PDFReader = ({ ebookFile, setSearches, transcription, searches, setAllDone
                                 </div>
 
 
-                                <p key={index} className=' w-fit p-3 textLayers text-sm' dangerouslySetInnerHTML={{ __html: (pdfText.length > 0 && pdfText.filter((page) => page.page === index + 1)[0]?.textInfo) == false ? "" : pdfText.length > 0 && pdfText.filter((page) => page.page === index + 1)[0]?.textInfo }}>
+                                <p key={index} className='  p-3 textLayers text-sm w-[35rem]' dangerouslySetInnerHTML={{ __html: (pdfText.length > 0 && pdfText.filter((page) => page.page === index + 1)[0]?.textInfo) == false ? "" : pdfText.length > 0 && pdfText.filter((page) => page.page === index + 1)[0]?.textInfo }}>
 
                                     {/* {pdfText.length > 0 && pdfText.filter((page) => page.page === index + 1)[0]?.textInfo} */}
                                 </p>
