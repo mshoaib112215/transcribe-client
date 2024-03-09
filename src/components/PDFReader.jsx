@@ -7,12 +7,13 @@ import { toast } from 'react-toastify';
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
 
 const PDFReader = ({ ebookFile, setSearches, transcription, searches, setAllDone, allDone, pdfText, setPdfText, segmentsText, playing, setNumPages, numPages }) => {
-    const [textInfo, setTextInfo] = useState([])
-    const [orignalText, setOrignalText] = useState(null);
+
+    const [show, setShow] = useState(true)
 
     const onDocumentLoadSuccess = ({ numPages }) => {
         setNumPages(numPages);
         setAllDone(false)
+        setPdfText([])
     };
 
     const extractText = useCallback(async (pageIndex, page) => {
@@ -23,12 +24,13 @@ const PDFReader = ({ ebookFile, setSearches, transcription, searches, setAllDone
             const x = transform[4];
             const y = transform[5];
             return {
-                text: str == '' ? " " : str,
+                text: str == '' ? "<br>" : str,
                 location: { x, y }
             };
         });
-        setTextInfo((prev) => [...prev, textItems])
-        const pageText = textItems.flatMap((item) => item.text).join('');
+
+        // setTextInfo((prev) => [...prev, textItems])
+        const pageText = textItems.flatMap((item) => item.text).join(' ');
         setPdfText(prevPdfText => [
             ...prevPdfText,
             {
@@ -158,13 +160,9 @@ const PDFReader = ({ ebookFile, setSearches, transcription, searches, setAllDone
                                 break;
                             }
                         }
-                        console.log(wordsToGet);
                         wordsToGet = wordsToGet.split('').reverse().join('');
-                        console.log(wordsToGet);
                     }
                     for (let j = 7; j >= 5; j--) {
-                        console.log(index)
-
                         // Adjust the starting point for the last words
                         let lastWords = '';
                         if (ender == 0) {
@@ -218,7 +216,8 @@ const PDFReader = ({ ebookFile, setSearches, transcription, searches, setAllDone
 
     return (
         <>
-            <div className='w-fit flex justify-center '>
+            <div className='w-fit flex flex-col justify-center '>
+                <button onClick={() => setShow(!show)} className="bg-blue-500 text-white py-2 px-4 rounded w-full max-w-md m-auto">Hide/Show Book Canvas</button>
                 <Document
                     file={ebookFile}
                     onLoadSuccess={onDocumentLoadSuccess}
@@ -227,31 +226,33 @@ const PDFReader = ({ ebookFile, setSearches, transcription, searches, setAllDone
                         <React.Fragment key={index}>
                             <p className=' text-[#808080b1] select-none'>
                                 <div className='flex w-full gap-52 justify-evenly'>
-                                    <span className='absolute'>
+                                    <span className='absolute '>
                                         Page {index + 1} of {numPages}
                                     </span>
-                                    <p>
+                                    <p className={`${!show ? "" : "hidden"} text-nowrap`}>
                                         Book Pages Canvas
                                     </p>
-                                    <p>
+                                    <p className='text-right w-full'>
                                         Extracted text
                                     </p>
                                 </div>
                             </p>
                             <div className='flex gap-2 items-center justify-center md:flex-row flex-col shadow-[2px_2px_11px_1px_#0000004a]   my-3'>
+                                <div className={`${!show ? "" : "hidden"}`}>
 
-                                <Page
-                                    pageNumber={index + 1}
-                                    renderAnnotationLayer={false}
-                                    renderTextLayer={false}
-                                    onLoadSuccess={(page) => extractText(index + 1, page)}
-                                    className={""}
-                                />
+                                    <Page
+                                        pageNumber={index + 1}
+                                        renderAnnotationLayer={false}
+                                        renderTextLayer={false}
+                                        onLoadSuccess={(page) => extractText(index + 1, page)}
+                                        className={""}
+                                    />
+                                </div>
 
 
-                                <p key={index} className='md:w-1/2 w-fit p-3 textLayer'>
-                                    {console.log(pdfText.filter((page) => page.page === index + 1)[0].textInfo)}
-                                    {pdfText.filter((page) => page.page === index + 1)[0].textInfo}
+                                <p key={index} className=' w-fit p-3 textLayers text-sm' dangerouslySetInnerHTML={{ __html: (pdfText.length > 0 && pdfText.filter((page) => page.page === index + 1)[0]?.textInfo) == false ? "" : pdfText.length > 0 && pdfText.filter((page) => page.page === index + 1)[0]?.textInfo }}>
+
+                                    {/* {pdfText.length > 0 && pdfText.filter((page) => page.page === index + 1)[0]?.textInfo} */}
                                 </p>
                             </div>
 
@@ -260,8 +261,7 @@ const PDFReader = ({ ebookFile, setSearches, transcription, searches, setAllDone
                     ))}
                 </Document>
             </div>
-            <div className='w-1/2 gap-3 flex justify-center flex-col   '>
-            </div>
+
 
         </>
     );
