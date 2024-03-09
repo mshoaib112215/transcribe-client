@@ -217,38 +217,53 @@ const PDFReader = ({ ebookFile, setSearches, transcription, searches, setAllDone
     };
 
     return (
-        <div className='w-fit flex justify-center'>
-            <Document
-                file={ebookFile}
-                onLoadSuccess={onDocumentLoadSuccess}
-            >
-                {numPages && [...Array(numPages)].map((page, index) => (
-                    <React.Fragment key={index}>
-                        <p className=' text-[#808080b1] select-none'>
-                            <div className='flex w-full gap-52 justify-evenly'>
-                                <span className='absolute'>
-                                    Page {index + 1} of {numPages}
-                                </span>
-                                <p>
-                                    Book Pages Canvas
-                                </p>
-                                <p>
-                                    Extracted text
+        <>
+            <div className='w-fit flex justify-center '>
+                <Document
+                    file={ebookFile}
+                    onLoadSuccess={onDocumentLoadSuccess}
+                >
+                    {numPages && [...Array(numPages)].map((page, index) => (
+                        <React.Fragment key={index}>
+                            <p className=' text-[#808080b1] select-none'>
+                                <div className='flex w-full gap-52 justify-evenly'>
+                                    <span className='absolute'>
+                                        Page {index + 1} of {numPages}
+                                    </span>
+                                    <p>
+                                        Book Pages Canvas
+                                    </p>
+                                    <p>
+                                        Extracted text
+                                    </p>
+                                </div>
+                            </p>
+                            <div className='flex gap-2 items-center justify-center md:flex-row flex-col shadow-[2px_2px_11px_1px_#0000004a]   my-3'>
+
+                                <Page
+                                    pageNumber={index + 1}
+                                    renderAnnotationLayer={false}
+                                    renderTextLayer={false}
+                                    onLoadSuccess={(page) => extractText(index + 1, page)}
+                                    className={""}
+                                />
+
+
+                                <p key={index} className='md:w-1/2 w-fit p-3 textLayer'>
+                                    {console.log(pdfText.filter((page) => page.page === index + 1)[0].textInfo)}
+                                    {pdfText.filter((page) => page.page === index + 1)[0].textInfo}
                                 </p>
                             </div>
-                        </p>
-                        <Page
-                            pageNumber={index + 1}
-                            renderAnnotationLayer={false}
-                            onLoadSuccess={(page) => extractText(index + 1, page)}
-                            className={"flex gap-2 items-center absolute my-3 justify-center md:flex-row flex-col text-xs shadow-[2px_2px_11px_1px_#0000004a] "}
-                        />
 
-                    </React.Fragment>
-                ))}
-            </Document>
-            <p>{pdfText.text}</p>
-        </div>
+
+                        </React.Fragment>
+                    ))}
+                </Document>
+            </div>
+            <div className='w-1/2 gap-3 flex justify-center flex-col   '>
+            </div>
+
+        </>
     );
 };
 

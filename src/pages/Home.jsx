@@ -28,6 +28,8 @@ function Home() {
   const [pdfText, setPdfText] = useState('');
   const [isCaputed, setIsCaputed] = useState(false);
   const [data, setData] = useState([]);
+  const [segmentsText, setSegmentsText] = useState([]);
+  const [numPages, setNumPages] = useState(null);
 
   const socketURL = "http://127.0.0.1:5111"
   // const socketURL = "http://13.51.205.166:5111"
@@ -449,7 +451,8 @@ function Home() {
 
 
         </form>
-        <PDFReader ebookFile={ebookFile} setSearches={setSearches} searches={searches} transcription={transcription} allDone={allDone} setAllDone={setAllDone} pdfText={pdfText} setPdfText={setPdfText} />
+        <PDFReader ebookFile={ebookFile} setSearches={setSearches} searches={searches} transcription={transcription} allDone={allDone} setAllDone={setAllDone} pdfText={pdfText} setPdfText={setPdfText} segmentsText={segmentsText} setNumPages={setNumPages} numPages={numPages} />
+
 
         {/* <ToastContainer /> */}
       </div>
