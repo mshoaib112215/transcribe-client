@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "audiobuffer-slice": "^0.0.7",
+    "axios": "^1.6.7",
     "file-saver": "^2.0.5",
     "kmp-matcher": "^0.1.2",
     "mp3-slice": "^1.1.2",

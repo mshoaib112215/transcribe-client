@@ -12,7 +12,7 @@ import PDFReader from "../components/PDFReader";
 import io from 'socket.io-client';
 
 
-function Home() {
+function Home({ user }) {
   const [audioFile, setAudioFile] = useState(null);
   const [timestampsFile, setTimestampsFile] = useState(null);
   const [ebookFile, setEbookFile] = useState(null);
@@ -31,13 +31,15 @@ function Home() {
   const [segmentsText, setSegmentsText] = useState([]);
   const [numPages, setNumPages] = useState(null);
 
-  const socketURL = "http://16.171.42.93:5111"
+  const socketURL = "http://127.0.0.1:5111"
+  // const socketURL = "http://16.171.42.93:5111"
 
   // const socketURL = "http://13.51.205.166:5111"
 
   const [newSocket, setNewSocket] = useState(null)
   useEffect(() => {// Establish socket connection
     setNewSocket(io(socketURL, { reconnection: true }))
+    
   }, []);
 
   useEffect(() => {
@@ -377,7 +379,7 @@ function Home() {
   };
   return (
     <>
-      <ToastContainer />
+      {/* <ToastContainer /> */}
       <Link to="/player" className="text-white   bg-blue-500 px-4 py-2  ">Go to player</Link>
 
       <div className="flex flex-col items-center justify-center gap-6 w-full mx-auto mt-10">

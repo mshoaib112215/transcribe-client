@@ -12,7 +12,7 @@ import { Link } from "react-router-dom"
 import PDFReader from "../components/PDFReader";
 import MemorizedAudioPlayer from "../components/MemorizedAudioPlayer";
 
-function Player() {
+function Player({ user }) {
 
     const [audioFile, setAudioFile] = useState(null);
     const [timestampsFile, setTimestampsFile] = useState(null);
@@ -35,8 +35,8 @@ function Player() {
     const [numPages, setNumPages] = useState(null);
     const [newSocket, setNewSocket] = useState(null);
     const [playing, setPlaying] = useState(false)
-    // const socketURL = "http://127.0.0.1:5111"
-    const socketURL = "http://16.171.42.93:5111"
+    const socketURL = "http://127.0.0.1:5111"
+    // const socketURL = "http://16.171.42.93:5111"
 
     let currentTime = 0;
     const [capturedTimeStamps, setCapturedTimeStamps] = useState([]);
@@ -46,12 +46,12 @@ function Player() {
     const orignalTextRef = useRef(null);
     const currentTimeRef = useRef(0);
     let battleSize = 5;
-    let startPage = 1; 
+    let startPage = 1;
     let endPage = battleSize;
     let processedSeg = useMemo(() => [], []);
     currentTime = audioPlayerRef && audioPlayerRef?.current?.audioEl.current.currentTime
     const handleTimeUpdate = useCallback((time) => {
-        
+
         if (!segmentsText || segmentsText.length === 0) return;
         for (const obj of segmentsText) {
             const current_time = obj.current_time;
@@ -162,7 +162,7 @@ function Player() {
 
     const captureTimestamp = useCallback(() => {
         setCapturedTimeStamps((prev) => [...prev, audioPlayerRef.current.audioEl.current.currentTime]);
-        toast.success(currentTime + " Added in the timestamps list");
+        toast.success(audioPlayerRef.current.audioEl.current.currentTime + " Added in the timestamps list");
     }, [currentTime]);
 
     useEffect(() => {
@@ -182,14 +182,14 @@ function Player() {
 
     const scropScrolling = useCallback(async () => {
         const res = await fetch(socketURL + "/stop-scroll", {
-            method: "POST"    
+            method: "POST"
         })
         const result = await res.json()
         console.log(result)
-        if (result.message == 'Scroll process stopped'){
+        if (result.message == 'Scroll process stopped') {
             toast.success('process stoped')
         }
-        else{
+        else {
             toast.error('Internal server error')
 
         }
@@ -268,6 +268,8 @@ function Player() {
 
     useEffect(() => {
         setNewSocket(io(socketURL));
+
+
     }, [])
     useEffect(() => {
         if (newSocket) {
@@ -351,6 +353,7 @@ function Player() {
     }, [audioFile]);
 
     useEffect(() => {
+        console.log(pdfText)
         if (allDone && pdfText.length > 0) {
             const allPageText = pdfText?.map((page) => page.text).join(' ');
             if (transcription.length > 0) {
@@ -449,9 +452,11 @@ function Player() {
         }
     };
 
-
+    const [bookName, setBookName] = useState('')
     const handleEbookFileChange = async (event) => {
         setEbookFile(URL.createObjectURL(event.target.files[0]));
+        setBookName(event.target.files[0].name)
+        
     };
 
     const handleTimestampsFileChange = (event) => {
@@ -476,7 +481,7 @@ function Player() {
                 return
             }
             const formData = new FormData();
-
+            
             formData.append('fileName', audioFile.name);
             formData.append('timeStamps', timeStamps);
             formData.append('audioDuration', audioDuration);
@@ -484,6 +489,13 @@ function Player() {
             formData.append('duration', duration);
             formData.append('timeStampsType', timeStampsType);
             formData.append('capturedTime', isCaputed);
+            formData.append('userId', user.id);
+            formData.append('pdfText', JSON.stringify(pdfText || []));
+            formData.append('bookName', bookName);
+            if (JSON.stringify(pdfText || []) == []) {
+                toast.error("Please upload a pdf file")
+                return
+            }
 
             const checkFileFormData = new FormData();
             checkFileFormData.append('fileName', audioFile.name);
@@ -645,9 +657,10 @@ function Player() {
                 />
                 <div className="max-w-md flex flex-col  gap-3 w-full">
 
-                    <button type="button"  onClick={() => scrollToText()} className="bg-blue-500 text-white py-2 px-4 rounded w-full disabled:bg-blue-300 disabled:cursor-not-allowed">Start scrolling process</button>
-                    <button type="button"  onClick={() => scropScrolling()} className="bg-blue-500 text-white py-2 px-4 rounded w-full disabled:bg-blue-300 disabled:cursor-not-allowed">Stop server for scrolling process</button>
+                    <button type="button" onClick={() => scrollToText()} className="bg-blue-500 text-white py-2 px-4 rounded w-full disabled:bg-blue-300 disabled:cursor-not-allowed">Start scrolling process</button>
+                    <button type="button" onClick={() => scropScrolling()} className="bg-blue-500 text-white py-2 px-4 rounded w-full disabled:bg-blue-300 disabled:cursor-not-allowed">Stop server for scrolling process</button>
                     <button type="button" className="bg-blue-500 disabled:bg-blue-300 disabled:cursor-not-allowed text-white py-2 px-4 rounded" onClick={() => captureTimestamp()}>Capture Timestamp</button>
+                    <button type="button" className="bg-blue-500 text-white py-2 px-4 rounded w-full" onClick={() => { transcribe() }}>Transcribe</button>
                     <button type="button" className="bg-blue-500 text-white py-2 px-4 rounded w-full" onClick={() => { setTimeStamps([]); setData([]); setTranscription([]); setSearches([]); setTimestampsFile(null); document.getElementById("timestamps-file").value = null; setIsCaputed(false) }}>Clear Data Table</button>
                 </div>
                 <PDFReader ebookFile={ebookFile} setSearches={setSearches} searches={searches} transcription={transcription} allDone={allDone} setAllDone={setAllDone} pdfText={pdfText} setPdfText={setPdfText} segmentsText={segmentsText} setNumPages={setNumPages} numPages={numPages} />
