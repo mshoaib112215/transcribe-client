@@ -40,7 +40,6 @@ const PDFReader = ({ ebookFile, setSearches, transcription, searches, setAllDone
             }
         ]);
 
-        setReadCompleted((prev) => (prev !== 100 ? (100 / numPages) * pageIndex : prev))
 
         if (pageIndex == numPages) {
             setAllDone(true)
@@ -49,7 +48,10 @@ const PDFReader = ({ ebookFile, setSearches, transcription, searches, setAllDone
     });
     const orignalTextRef = useRef(null);
 
+    useEffect(() => {
+        setReadCompleted((prev) => (prev !== 100 ? (100 / numPages) * pdfText[pdfText.length - 1]?.page : prev))
 
+    }, [pdfText])
     useEffect(() => {
         if (allDone) {
 
@@ -175,8 +177,8 @@ const PDFReader = ({ ebookFile, setSearches, transcription, searches, setAllDone
                             </div>
                         </div>
                     ) : (
-                            // toast.success("Book Loaded Successfully!")
-                            null
+                        // toast.success("Book Loaded Successfully!")
+                        null
 
 
                     )

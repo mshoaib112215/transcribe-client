@@ -35,7 +35,10 @@ function Player({ user }) {
     const [numPages, setNumPages] = useState(null);
     const [newSocket, setNewSocket] = useState(null);
     const [playing, setPlaying] = useState(false)
-    const socketURL = "http://127.0.0.1:5111"
+    const [bookName, setBookName] = useState();
+
+
+    const socketURL = "http://13.60.15.52:5111"
     // const socketURL = "http://16.171.42.93:5111"
 
     let currentTime = 0;
@@ -354,7 +357,7 @@ function Player({ user }) {
 
     useEffect(() => {
         if (allDone && pdfText.length > 0) {
-            const allPageText = pdfText?.map((page) => page.text).join(' ');
+            const allPageText = pdfText?.map((page) => page.textInfo).join(' ');
             if (transcription.length > 0) {
                 const searchPromises = transcription?.map(async (searchTerm) => {
                     const result = await searchPDF(allPageText, searchTerm.text);
@@ -362,7 +365,8 @@ function Player({ user }) {
                 });
 
                 Promise.all(searchPromises)
-                    .then(results => {
+                .then(results => {
+                        console.log(results)
                         setSearches(results);
                     })
                     .catch(error => {
@@ -370,8 +374,9 @@ function Player({ user }) {
                     });
             }
         }
+    // }, [ segmentsText]);
     }, [transcription, allDone, pdfText]);
-
+   
     const searchPDF = useCallback(async (pdfText, searchTerm) => {
         const searchResults = [];
         let starter = 0;
@@ -438,6 +443,7 @@ function Player({ user }) {
             }
         }
 
+
         return searchResults[0];
     }, []);
 
@@ -451,13 +457,16 @@ function Player({ user }) {
         }
     };
 
-    const [bookName, setBookName] = useState('')
     const handleEbookFileChange = async (event) => {
         setEbookFile(URL.createObjectURL(event.target.files[0]));
         setBookName(event.target.files[0].name)
 
+
     };
 
+    useEffect(()=>{
+        console.log(bookName)
+    }, [bookName])
     const handleTimestampsFileChange = (event) => {
         if (event.target.files && event.target.files[0]) {
             const file = event.target.files[0];
@@ -480,8 +489,15 @@ function Player({ user }) {
                 toast.error("Please add time stamps")
                 return
             }
+            if (bookName == null) {
+                toast.error("Cannot get Book name")
+                return
+            }
+            else{
+                console.log(bookName)
+            }
             const formData = new FormData();
-
+            
             formData.append('fileName', audioFile.name);
             formData.append('timeStamps', timeStamps);
             formData.append('audioDuration', audioDuration);
@@ -633,7 +649,7 @@ function Player({ user }) {
 
 
                 </form>
-                <button type="button" onClick={() => scrollToHighlight()} className="bg-blue-500 text-white py-2 px-4 rounded sticky top-3 max-w-md w-full">Scroll to highlight</button>
+                <button type="button" onClick={() => scrollToHighlight()} className="bg-blue-500 text-white py-2 px-4 rounded sticky top-3 max-w-md w-full z-50">Scroll to highlight</button>
 
                 <AudioPlayer
                     ref={audioPlayerRef}
@@ -646,7 +662,7 @@ function Player({ user }) {
                     onSeeked={handleSeeked}
                     onPlay={handlePlaying}
                     onPause={handlePause}
-                    className="sticky top-14 max-w-md"
+                    className="sticky top-14 max-w-md z-50"
                     style={{ width: '100%' }}
                     customProgressBarSection={[
                         <div>

@@ -8,10 +8,10 @@ import { utils, write } from "xlsx";
 
 const DataTableDisplay = ({ data }) => {
     const [specificKeysData, setSpecificKeysData] = useState([]);
-
+    const [loading, setLoading] = useState(false);
 
     const timeFormator = (time) => {
-        if(time.includes(':'))
+        if (time.includes(':'))
             return time
         time = time.split(',')
         try {
@@ -25,13 +25,14 @@ const DataTableDisplay = ({ data }) => {
 
     useEffect(() => {
         const fetchData = async () => {
+            setLoading(true)
             const updatedData = await Promise.all(data?.map(async ({ timestamps, book_name, transcriptions, book_text }) => {
                 const timestampsArray = timestamps.split(',');
                 const updatedArray = timestampsArray.map(timestamp => {
                     const searchTerm = JSON.parse(transcriptions)[timestampsArray.indexOf(timestamp)].text;
                     const pdfText = JSON.parse(book_text).map((page) => page.textInfo.replace(/<br>/g, " ")).join(' ');
 
-                    const searchResult =  searchPDF(pdfText, searchTerm);
+                    const searchResult = searchPDF(pdfText, searchTerm);
 
                     return [book_name, timeFormator(timestamp), searchTerm, searchResult];
                 });
@@ -43,7 +44,7 @@ const DataTableDisplay = ({ data }) => {
             const AOAData = updatedData.reduce((acc, curr) => {
                 return acc.concat(curr);
             })
-            
+            setLoading(false)
             setSpecificKeysData(AOAData);
         };
         console.log(data)
@@ -63,7 +64,7 @@ const DataTableDisplay = ({ data }) => {
             ),
         };
     });
-    const searchPDF = useCallback( (pdfText, searchTerm) => {
+    const searchPDF = useCallback((pdfText, searchTerm) => {
         const searchResults = [];
         let starter = 0;
         let ender = 0;
@@ -71,8 +72,8 @@ const DataTableDisplay = ({ data }) => {
         for (let i = 7; i >= 4; i--) {
             const firstWords = searchTerm.split(' ').slice(starter, i + starter).join(' ');
             let wordsToGet = "";
-            const firstWordsIndices =    kmp_matcher.kmp(pdfText, firstWords);
-            
+            const firstWordsIndices = kmp_matcher.kmp(pdfText, firstWords);
+
             for (const index of firstWordsIndices) {
                 const slicedText = pdfText.slice(index)
                 if (firstWordsIndices !== -1) {
@@ -129,7 +130,9 @@ const DataTableDisplay = ({ data }) => {
             }
         }
         console.log(searchResults)
-        
+        console.log(searchTerm)
+        console.log(pdfText)
+
         return searchResults[0];
     }, []);
     const downloadXLSX = () => {
@@ -148,26 +151,33 @@ const DataTableDisplay = ({ data }) => {
         return buf;
     }
     return (
-        <div className="w-full mt-4">
-            <h2 className="text-xl font-semibold mb-2">Table View</h2>
-            <button
-                type="button"
-                onClick={downloadXLSX}
-                className="bg-blue-500 text-white py-2 px-4 rounded"
-            >
-                Download as XLSX
-            </button>
-            <div className="w-full h-[50vh] mt-4">
-                <DataTable
-                    columns={columns}
-                    data={specificKeysData}
-                    responsive
-                    pagination
-                    className="rounded-lg overflow-hidden shadow-md"
-                />
-            </div>
-        </div>
+
+        loading ?
+            <div>Loading...</div>
+            :
+            <>
+                <div className="w-full mt-4">
+                    <h2 className="text-xl font-semibold mb-2">Table View</h2>
+                    <button
+                        type="button"
+                        onClick={downloadXLSX}
+                        className="bg-blue-500 text-white py-2 px-4 rounded"
+                    >
+                        Download as XLSX
+                    </button>
+                    <div className="w-full h-[50vh] mt-4">
+                        <DataTable
+                            columns={columns}
+                            data={specificKeysData}
+                            responsive
+                            pagination
+                            className="rounded-lg overflow-hidden shadow-md"
+                        />
+                    </div>
+                </div>
+            </>
     );
+
 };
 
 export default DataTableDisplay;

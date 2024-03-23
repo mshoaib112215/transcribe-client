@@ -38,6 +38,7 @@ const TimestampsFileInput = ({ handleFileChange, timestampsFile, setTimeStamps, 
         try {
             let filteredSearches = searches.filter(search => search !== undefined || search !== "" || search !== null);
             let uniqueSearches = filteredSearches.filter((search, index, self) => self.indexOf(search) === index);
+            console.log(searches)
             setData(prevData => prevData.map((subArray, index) => {
                 return [...subArray, transcription[index]?.text == '' ? "Got empty string please see your audio and Timestamps combination" : transcription[index]?.text, (uniqueSearches[index]) || ""]
             }));
