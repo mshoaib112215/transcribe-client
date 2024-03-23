@@ -3,8 +3,6 @@ import Home from '../pages/Home';
 import Player from '../pages/Player';
 import io from 'socket.io-client';
 import React, { useEffect, useState } from 'react';
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
 
 import Protected from '../Protected/Protected';
 import Login from './Login';
@@ -19,7 +17,6 @@ const Routers = () => {
 
     return (
         <Router>
-            <ToastContainer />
 
             <Routes>
                 <Route

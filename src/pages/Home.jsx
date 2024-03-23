@@ -39,7 +39,7 @@ function Home({ user }) {
   const [newSocket, setNewSocket] = useState(null)
   useEffect(() => {// Establish socket connection
     setNewSocket(io(socketURL, { reconnection: true }))
-    
+
   }, []);
 
   useEffect(() => {
@@ -47,7 +47,7 @@ function Home({ user }) {
     if (newSocket) {
 
       newSocket.on('connect', () => {
-        toast.success('Connected to server');
+        // toast.success('Connected to server');
       });
       // Event listener for 'connect_error' event
       newSocket.on('connect_error', () => {
@@ -380,7 +380,11 @@ function Home({ user }) {
   return (
     <>
       {/* <ToastContainer /> */}
-      <Link to="/player" className="text-white   bg-blue-500 px-4 py-2  ">Go to player</Link>
+      <div className="flex justify-evenly">
+
+        <Link to="/player" className="text-white   bg-blue-500 px-4 py-2  rounded-md ">Go to player</Link>
+        <Link to="/feeds" className="text-white   bg-blue-500 px-4 py-2 rounded-md ">Go to Feeds</Link>
+      </div>
 
       <div className="flex flex-col items-center justify-center gap-6 w-full mx-auto mt-10">
         <h1 className="text-3xl font-bold">Audio to Text</h1>

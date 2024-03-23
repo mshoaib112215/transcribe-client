@@ -9,13 +9,14 @@ pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/$
 const PDFReader = ({ ebookFile, setSearches, transcription, searches, setAllDone, allDone, pdfText, setPdfText, segmentsText, playing, setNumPages, numPages }) => {
 
     const [show, setShow] = useState(true)
+    const [readCompleted, setReadCompleted] = useState(0)
 
     const onDocumentLoadSuccess = ({ numPages }) => {
         setNumPages(numPages);
         setAllDone(false)
         setPdfText([])
+        setReadCompleted(0)
     };
-
     const extractText = useCallback(async (pageIndex, page) => {
         const textContent = await page.getTextContent();
         // console.log(textContent)
@@ -38,9 +39,10 @@ const PDFReader = ({ ebookFile, setSearches, transcription, searches, setAllDone
                 textInfo: pageText,
             }
         ]);
-        // console.log(numPages, " ", pageIndex)
-        if (pageIndex == numPages) {
 
+        setReadCompleted((prev) => (prev !== 100 ? (100 / numPages) * pageIndex : prev))
+
+        if (pageIndex == numPages) {
             setAllDone(true)
 
         }
@@ -48,41 +50,9 @@ const PDFReader = ({ ebookFile, setSearches, transcription, searches, setAllDone
     const orignalTextRef = useRef(null);
 
 
-
     useEffect(() => {
         if (allDone) {
-            // setTimeout(() => {
 
-            //     orignalTextRef.current = document.getElementsByClassName("markedContent");
-            //     // setOrignalText(orignalTextRef);
-            //     if (orignalTextRef.current) {
-            //         Array.from(orignalTextRef.current).forEach((s, i) => {
-            //             Array.from(s.getElementsByTagName("span")).forEach((ss, i) => {
-            //                 const newSpans = highlightSearchTerm(ss.innerText, `Rockwell `);
-            //                 ss.innerHTML = newSpans;
-            //             });
-            //         });
-            //     }
-            // }, 100);
-            // segmentsText.map((obj) => {
-            //     const current_time = obj.current_time
-            //     obj?.text?.segments.forEach((seg) => {
-            //         console.log(seg.start + current_time )
-            //         console.log(seg.end + current_time )
-
-            //         // orignalTextRef.current = document.getElementsByClassName("markedContent");
-
-            //         // setOrignalText(orignalTextRef);
-            //         // if (orignalTextRef.current) {
-            //         //     Array.from(orignalTextRef.current).forEach((s, i) => {
-            //         //         Array.from(s.getElementsByTagName("span")).forEach((ss, i) => {
-            //         //             const newSpans = highlightSearchTerm(ss.innerText, `Rockwell `);
-            //         //             ss.innerHTML = newSpans;
-            //         //         });
-            //         //     });
-            //         // }
-            //     })
-            // })
 
         }
         else if (Array.from(segmentsText).length != 0) {
@@ -91,32 +61,10 @@ const PDFReader = ({ ebookFile, setSearches, transcription, searches, setAllDone
         }
     }, [segmentsText]);
 
-    // useEffect(() => {
-    //     if (playing != 0) {
-    //         // console.log(playing)
-    //         segmentsText && segmentsText?.map((obj) => {
-    //             const current_time = obj.current_time
-    //             obj?.text?.segments.forEach((seg) => {
-    //                 console.log(seg.start + current_time)
-    //                 console.log(seg.end + current_time)
 
-    //                 // orignalTextRef.current = document.getElementsByClassName("markedContent");
-
-    //                 // setOrignalText(orignalTextRef);
-    //                 // if (orignalTextRef.current) {
-    //                 //     Array.from(orignalTextRef.current).forEach((s, i) => {
-    //                 //         Array.from(s.getElementsByTagName("span")).forEach((ss, i) => {
-    //                 //             const newSpans = highlightSearchTerm(ss.innerText, `Rockwell `);
-    //                 //             ss.innerHTML = newSpans;
-    //                 //         });
-    //                 //     });
-    //                 // }
-    //             })
-    //         })
-    //     }
-    // }, [playing])
-
-
+    const messageSucess = () => {
+        toast.success("Book Loaded Successfully!")
+    }
 
     const searchPDF = async (pdfText, searchTerm) => {
         const searchResults = [];
@@ -216,8 +164,24 @@ const PDFReader = ({ ebookFile, setSearches, transcription, searches, setAllDone
 
     return (
         <>
-            <div className='w-fit flex flex-col justify-center '>
+            <div className='w-fit flex flex-col justify-center space-y-5'>
                 <button onClick={() => setShow(!show)} className="bg-blue-500 text-white py-2 px-4 rounded w-full max-w-md m-auto">Hide/Show Book Canvas</button>
+                {readCompleted !== 0 && (
+                    readCompleted <= 99 ? (
+                        <div>
+                            Loading Book ({readCompleted.toFixed(0)}%)
+                            <div className='relative h-[10px] bg-gray-300 rounded-full'>
+                                <div className='h-[10px] bg-blue-500 rounded-full' style={{ width: `${readCompleted}%` }}></div>
+                            </div>
+                        </div>
+                    ) : (
+                            // toast.success("Book Loaded Successfully!")
+                            null
+
+
+                    )
+                )}
+
                 <Document
                     file={ebookFile}
                     onLoadSuccess={onDocumentLoadSuccess}

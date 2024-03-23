@@ -180,7 +180,7 @@ function Player({ user }) {
         setPlaying(false)
     }, []);
 
-    const scropScrolling = useCallback(async () => {
+    const stopScrolling = useCallback(async () => {
         const res = await fetch(socketURL + "/stop-scroll", {
             method: "POST"
         })
@@ -274,7 +274,7 @@ function Player({ user }) {
     useEffect(() => {
         if (newSocket) {
             newSocket.on('connect', () => {
-                toast.success('Connected to server');
+                // toast.success('Connected to server');
             });
             newSocket.on('connect_error', () => {
                 toast.error('Error connecting to server, retrying in 3 seconds...');
@@ -353,7 +353,6 @@ function Player({ user }) {
     }, [audioFile]);
 
     useEffect(() => {
-        console.log(pdfText)
         if (allDone && pdfText.length > 0) {
             const allPageText = pdfText?.map((page) => page.text).join(' ');
             if (transcription.length > 0) {
@@ -456,7 +455,7 @@ function Player({ user }) {
     const handleEbookFileChange = async (event) => {
         setEbookFile(URL.createObjectURL(event.target.files[0]));
         setBookName(event.target.files[0].name)
-        
+
     };
 
     const handleTimestampsFileChange = (event) => {
@@ -465,6 +464,7 @@ function Player({ user }) {
             const reader = new FileReader();
             reader.onload = (event) => {
                 const binaryStr = event.target.result;
+                setData([])
                 setTimestampsFile(binaryStr);
             };
             reader.readAsBinaryString(file);
@@ -481,7 +481,7 @@ function Player({ user }) {
                 return
             }
             const formData = new FormData();
-            
+
             formData.append('fileName', audioFile.name);
             formData.append('timeStamps', timeStamps);
             formData.append('audioDuration', audioDuration);
@@ -574,8 +574,13 @@ function Player({ user }) {
     };
     return (
         <>
-            <ToastContainer />
-            <Link to="/" className="text-white   bg-blue-500 px-4 py-2  "> Go to Home</Link>
+
+            <div className="flex justify-start">
+
+                {/* <Link to="/" className="text-white   bg-blue-500 px-4 py-2  rounded-md ">Go to Home</Link> */}
+                <Link to="/" className="text-white   bg-blue-500 px-4 py-2 rounded-md ">Go to Home</Link>
+            </div>
+
             <div className="flex flex-col items-center justify-center gap-6 w-full mx-auto mt-10">
                 <h1 className="text-3xl font-bold">Audio to Text</h1>
 
@@ -657,15 +662,15 @@ function Player({ user }) {
                 />
                 <div className="max-w-md flex flex-col  gap-3 w-full">
 
-                    <button type="button" onClick={() => scrollToText()} className="bg-blue-500 text-white py-2 px-4 rounded w-full disabled:bg-blue-300 disabled:cursor-not-allowed">Start scrolling process</button>
-                    <button type="button" onClick={() => scropScrolling()} className="bg-blue-500 text-white py-2 px-4 rounded w-full disabled:bg-blue-300 disabled:cursor-not-allowed">Stop server for scrolling process</button>
                     <button type="button" className="bg-blue-500 disabled:bg-blue-300 disabled:cursor-not-allowed text-white py-2 px-4 rounded" onClick={() => captureTimestamp()}>Capture Timestamp</button>
-                    <button type="button" className="bg-blue-500 text-white py-2 px-4 rounded w-full" onClick={() => { transcribe() }}>Transcribe</button>
-                    <button type="button" className="bg-blue-500 text-white py-2 px-4 rounded w-full" onClick={() => { setTimeStamps([]); setData([]); setTranscription([]); setSearches([]); setTimestampsFile(null); document.getElementById("timestamps-file").value = null; setIsCaputed(false) }}>Clear Data Table</button>
+                    <button type="button" onClick={() => scrollToText()} className="bg-blue-500 text-white py-2 px-4 rounded w-full disabled:bg-blue-300 disabled:cursor-not-allowed">Start scrolling process</button>
+                    <button type="button" onClick={() => stopScrolling()} className="bg-blue-500 text-white py-2 px-4 rounded w-full disabled:bg-blue-300 disabled:cursor-not-allowed">Stop server for scrolling process</button>
+                    <button type="button" disabled={!allDone} className="bg-blue-500 text-white py-2 px-4 rounded w-full disabled:bg-blue-400 disabled:cursor-not-allowed" onClick={() => { transcribe() }}>Transcribe</button>
                 </div>
                 <PDFReader ebookFile={ebookFile} setSearches={setSearches} searches={searches} transcription={transcription} allDone={allDone} setAllDone={setAllDone} pdfText={pdfText} setPdfText={setPdfText} segmentsText={segmentsText} setNumPages={setNumPages} numPages={numPages} />
+                <button type="button" className="bg-blue-500 text-white py-2 px-4 rounded w-full max-w-md" onClick={() => { setTimeStamps([]); setData([]); setTranscription([]); setSearches([]); setTimestampsFile(null); document.getElementById("timestamps-file").value = null; setIsCaputed(false) }}>Clear Data Table</button>
 
-                <TimestampsFileInput handleFileChange={handleTimestampsFileChange} timestampsFile={timestampsFile} setTimeStamps={setTimeStamps} transcription={transcription} searches={searches} setData={setData} data={data} timeStamps={timeStamps} setIsCaputed={setIsCaputed} isCaputed={isCaputed} />
+                <TimestampsFileInput handleFileChange={handleTimestampsFileChange} timestampsFile={timestampsFile} setTimeStamps={setTimeStamps} transcription={transcription} searches={searches} setData={setData} data={data} timeStamps={timeStamps} setIsCaputed={setIsCaputed} />
             </div>
         </>
     );
