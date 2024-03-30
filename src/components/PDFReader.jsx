@@ -25,7 +25,7 @@ const PDFReader = ({ ebookFile, setSearches, transcription, searches, setAllDone
             const x = transform[4];
             const y = transform[5];
             return {
-                text: str == '' ? "<br>" : str,
+                text: str == '' ? " " : str,
                 location: { x, y }
             };
         });
@@ -168,7 +168,7 @@ const PDFReader = ({ ebookFile, setSearches, transcription, searches, setAllDone
         <>
             <div className='w-fit flex flex-col justify-center space-y-5'>
                 <button onClick={() => setShow(!show)} className="bg-blue-500 text-white py-2 px-4 rounded w-full max-w-md m-auto">Hide/Show Book Canvas</button>
-                {readCompleted !== 0 && (
+                {!allDone && readCompleted !== 0 && (
                     readCompleted <= 99 ? (
                         <div>
                             Loading Book ({readCompleted.toFixed(0)}%)

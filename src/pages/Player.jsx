@@ -38,7 +38,8 @@ function Player({ user }) {
     const [bookName, setBookName] = useState();
 
 
-    const socketURL = "http://13.60.15.52:5111"
+    const socketURL = "http://127.0.0.1:5111"
+    // const socketURL = "http://13.60.15.52:5111"
     // const socketURL = "http://16.171.42.93:5111"
 
     let currentTime = 0;
@@ -460,7 +461,7 @@ function Player({ user }) {
     const handleEbookFileChange = async (event) => {
         setEbookFile(URL.createObjectURL(event.target.files[0]));
         setBookName(event.target.files[0].name)
-
+        console.log(event.target.files[0].name)
 
     };
 
@@ -490,11 +491,9 @@ function Player({ user }) {
                 return
             }
             if (bookName == null) {
+                console.log(bookName)
                 toast.error("Cannot get Book name")
                 return
-            }
-            else{
-                console.log(bookName)
             }
             const formData = new FormData();
             
@@ -548,7 +547,7 @@ function Player({ user }) {
                             }
                         ),
                         {
-                            pending: 'Processing Transcription...',
+                            pending: 'Adding in Queue...',
                             success: 'Processing Completed!',
                             error: 'Processing Failed!'
                         }
@@ -556,12 +555,12 @@ function Player({ user }) {
 
 
                     if (result.ok) {
-                        toast.success('Transcription successful!');
+                        toast.success('Process added in Queue successful!');
                     } else {
-                        toast.error('Transcription failed!');
+                        toast.error('Process added in Queue failed!');
                     }
                 } catch (error) {
-                    toast.error('Error during transcription:', error);
+                    toast.error('Error during queuing:', error);
                 }
 
             } catch (error) {
@@ -573,7 +572,7 @@ function Player({ user }) {
         }
 
 
-    }, [audioFile, timeStamps, audioDuration, offset, duration, timeStampsType, isCaputed, socketURL]);
+    }, [audioFile, timeStamps, audioDuration, offset, duration, timeStampsType, isCaputed, socketURL, bookName]);
 
     const playAllChunks = () => {
         const audioElements = chunks.map((chunk, index) => (

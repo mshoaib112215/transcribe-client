@@ -3,7 +3,7 @@ import DataTableDisplay from './DataTableDisplay'
 import { toast } from 'react-toastify'
 import { Link } from 'react-router-dom'
 
-const Feeds = () => {
+const Feeds = ({user}) => {
     const [feeds, setFeeds] = useState([])
     const [showDataTable, setShowDataTable] = useState(false)
     const [selectedFeed, setSelectedFeed] = useState({})
@@ -12,12 +12,12 @@ const Feeds = () => {
     useEffect(() => {
         setLoading(true)
         const fetchFeeds = async () => {
-            const res = await fetch('https://www.noteclimber.com/noteclimberConnection.php/api/get-trans', {
+            const res = await fetch('http://localhost/noteclimberConnection.php/api/get-trans', {
                 method: 'GET',
             })
+            
             const data = await res.json();
-            console.log(data)
-            setFeeds(data)
+            setFeeds(data.filter(d => d.status.includes('100') ))
             setLoading(false)
         }
         fetchFeeds();
@@ -43,10 +43,10 @@ const Feeds = () => {
     }
     return (
         <>
-            <div className="flex justify-start">
+            <div className="flex justify-start gap-3">
 
                 <Link to="/player" className="text-white   bg-blue-500 px-4 py-2  rounded-md ">Go to Player</Link>
-                {/* <Link to="/player" className="text-white   bg-blue-500 px-4 py-2 rounded-md ">Go to Player</Link> */}
+                <Link to="/profile" className="text-white   bg-blue-500 px-4 py-2 rounded-md ">Go to Profile</Link>
             </div>
             <div className=" p-4 ">
 
@@ -74,7 +74,7 @@ const Feeds = () => {
                                 ))
                                 :
                                 <tr>
-                                    <td className="p-2 text-sm border capitalize">No feeds found</td>
+                                    <td className="p-2 text-sm  capitalize">No feeds found</td>
                                 </tr>
                             :
                             <>

@@ -21,19 +21,20 @@ const DataTableDisplay = ({ data }) => {
         catch (er) {
             toast.error("Error will converting time " + er + time)
         }
-    }
+    }   
 
     useEffect(() => {
         const fetchData = async () => {
             setLoading(true)
             const updatedData = await Promise.all(data?.map(async ({ timestamps, book_name, transcriptions, book_text }) => {
-                const timestampsArray = timestamps.split(',');
-                const updatedArray = timestampsArray.map(timestamp => {
-                    const searchTerm = JSON.parse(transcriptions)[timestampsArray.indexOf(timestamp)].text;
+                const timestampsArray = timestamps?.split(',');
+                const updatedArray = timestampsArray.map((timestamp, i) => {
+                    console.log(JSON.parse(transcriptions))
+                    let searchTerm = JSON.parse(transcriptions)[timestampsArray.indexOf(timestamp)]?.text || "";
                     const pdfText = JSON.parse(book_text).map((page) => page.textInfo.replace(/<br>/g, " ")).join(' ');
 
-                    const searchResult = searchPDF(pdfText, searchTerm);
-
+                    let searchResult = searchPDF(pdfText, searchTerm);
+                    searchTerm == "" ? searchResult = "" : searchResult
                     return [book_name, timeFormator(timestamp), searchTerm, searchResult];
                 });
 
@@ -129,9 +130,9 @@ const DataTableDisplay = ({ data }) => {
                 starter++;
             }
         }
-        console.log(searchResults)
-        console.log(searchTerm)
-        console.log(pdfText)
+        // console.log(searchResults)
+        // console.log(searchTerm)
+        // console.log(pdfText)
 
         return searchResults[0];
     }, []);

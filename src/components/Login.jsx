@@ -32,7 +32,7 @@ function Login({ setIsAuth, isAuth, setUser }) {
         formdata.append('email', email)
         formdata.append('password', password)
 
-        const res = await fetch('https://www.noteclimber.com/noteclimberConnection.php/api/login', {
+        const res = await fetch('http://localhost/noteclimberConnection.php/api/login', {
             credentials: 'same-origin',
             method: 'POST',
             body: formdata
