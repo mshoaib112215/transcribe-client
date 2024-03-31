@@ -12,7 +12,7 @@ const Feeds = ({user}) => {
     useEffect(() => {
         setLoading(true)
         const fetchFeeds = async () => {
-            const res = await fetch('http://localhost/noteclimberConnection.php/api/get-trans', {
+            const res = await fetch('https://www.noteclimber.com/noteclimberConnection.php/api/get-trans', {
                 method: 'GET',
             })
             

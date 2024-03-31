@@ -15,7 +15,7 @@ const ProfileTable = ({ type, setWholeData, user }) => {
 
     useEffect(() => {
         const fetchData = async () => {
-            const res = await fetch('http://localhost/noteclimberConnection.php/api/get-trans', {
+            const res = await fetch('https://www.noteclimber.com/noteclimberConnection.php/api/get-trans', {
                 method: 'GET',
             })
             const data = await res.json();
