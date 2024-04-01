@@ -572,7 +572,7 @@ function Player({ user }) {
         }
 
 
-    }, [audioFile, timeStamps, audioDuration, offset, duration, timeStampsType, isCaputed, socketURL, bookName]);
+    }, [audioFile, timeStamps, audioDuration, offset, duration, timeStampsType, isCaputed, socketURL, bookName, pdfText]);
 
     const playAllChunks = () => {
         const audioElements = chunks.map((chunk, index) => (
