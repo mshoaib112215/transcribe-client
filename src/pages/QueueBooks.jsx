@@ -18,12 +18,12 @@ const QueueBooks = ({ user, setWholeData, wholeData}) => {
 
                     <Link to='/profile' className='border shadow-md flex-1 p-12 flex justify-center rounded-lg cursor-pointer'>
                         <div className='flex items-center gap-2'>
-                            Your Completed Books: <span className='text-xl'>{wholeData.filter(d => d.status.includes('100')).length.toString()}</span>
+                            Your Completed Books: <span className='text-xl'>{wholeData.filter(d => d.status.includes('100') && d.user_id == user.id).length.toString()}</span>
                         </div>
                     </Link>
                     <Link to='/profile/queue' className='border shadow-md flex-1 flex justify-center p-12 rounded-lg cursor-pointer'>
                         <div className='flex items-center gap-2'>
-                            Your Pending Books: <span className='text-xl'>{wholeData.filter(d => !d.status.includes('100')).length.toString()}</span>
+                            Your Pending Books: <span className='text-xl'>{wholeData.filter(d => !d.status.includes('100') && d.user_id == user.id).length.toString()}</span>
                         </div>
                     </Link>
                 </div>

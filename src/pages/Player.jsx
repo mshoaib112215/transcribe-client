@@ -38,8 +38,8 @@ function Player({ user }) {
     const [bookName, setBookName] = useState();
 
 
-    const socketURL = "http://13.49.185.239:5111"
-    // const socketURL = "http://13.60.15.52:5111"
+    // const socketURL = "http://13.49.185.239:5111"
+    const socketURL = "http://127.0.0.1:5111"
     // const socketURL = "http://16.171.42.93:5111"
 
     let currentTime = 0;
