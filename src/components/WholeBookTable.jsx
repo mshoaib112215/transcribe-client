@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
-import DataTableDisplay from './DataTableDisplay'
+import Regenerate from './Regenerate'
 
-const ProfileTable = ({ type, setWholeData, user }) => {
+const WholeBookTable = ({type = "1", setWholeData}) => {
     const [data, setData] = useState([])
 
     const [showDataTable, setShowDataTable] = useState(false)
@@ -10,21 +10,20 @@ const ProfileTable = ({ type, setWholeData, user }) => {
 
     const memoShowDataTable = React.useMemo(() => {
         return showDataTable
-    }, [showDataTable]);
-
+    }, [showDataTable]);    
 
     useEffect(() => {
         const fetchData = async () => {
-            const res = await fetch('https://www.noteclimber.com/noteclimberConnection.php/api/get-trans', {
+            const res = await fetch('https://www.noteclimber.com/noteclimberConnection.php/api/get-all-whole-trans', {
                 method: 'GET',
             })
             const data = await res.json();
             let newData = null;
             if (type == 1) {
-                newData = data.filter(d => d.status.includes('100') && d.user_id == user.id)
+                newData = data.filter(d => d.status.includes('100') )
             }
             else {
-                newData = data.filter(d => !d.status.includes('100') )
+                newData = data.filter(d => d.length != 0 ? !d.status.includes('100'): {})
             }
             setData(newData)
             setWholeData(data)
@@ -32,12 +31,12 @@ const ProfileTable = ({ type, setWholeData, user }) => {
         }
         fetchData();
         setShowDataTable(false);
-        // fetchData();
-        // const timer = setInterval(() => {
-        //     // setSelectedFeed({});
-        // }, 10000); // 3000 milliseconds = 3 seconds
+        const timer = setInterval(() => {
+            fetchData();
+            // setSelectedFeed({});
+        }, 10000); // 3000 milliseconds = 3 seconds
 
-        // return () => clearInterval(timer);
+        return () => clearInterval(timer);
     }, []);
     const regenerateNote = (feed) => {
         setShowDataTable(true);
@@ -45,28 +44,16 @@ const ProfileTable = ({ type, setWholeData, user }) => {
 
 
     }
-    const timeFormator = (time) => {
-        time = time.split(',')
-        try {
-            // push all times with time formate but with comman
-            return time.map(t => new Date(t * 1000).toISOString().substr(11, 8)).join(', ')
-        }
-        catch (er) {
-            toast.error("Error will converting time " + er + time)
-        }
-    }
     return (
         <>
 
             <h2 className='text-2xl font-bold mb-4'>{type == 1 ? 'Completed Transcriptions' : 'Pending Transcriptions'}</h2>
 
-            <div className="w-full">
 
-            <table className="w-full border border-collapse border-gray-300 transition-all mt-3 h-fit ">
+            <table className="w-full border border-collapse border-gray-300 transition-all mt-3 h-fit">
                 <thead>
                     <tr className="bg-gray-200">
                         <th className="p-2 ">Book Name</th>
-                        <th className="p-2 ">Timestamps</th>
                         <th className="p-2 ">Status</th>
                         <th className="p-2 ">Action</th>
                     </tr>
@@ -77,8 +64,8 @@ const ProfileTable = ({ type, setWholeData, user }) => {
                         data.length > 0 ?
                             data.map((feed, i) => (
                                 <tr key={feed.id} className="mb-2">
-                                    <td className="p-2 text-sm border capitalize">{feed.book_name}</td>
-                                    <td className="p-2 text-sm text-gray-600 border word-break-all">{feed.timestamps.includes(':') ? feed.timestamps : timeFormator(feed.timestamps)}</td>
+                                    <td className="p-2 text-sm border capitalize">{feed.audio_book_name}</td>
+                                   
 
                                     <td className="p-2 text-sm border capitalize whitespace-nowrap">
                                         {!feed.status == '' ?
@@ -147,11 +134,7 @@ const ProfileTable = ({ type, setWholeData, user }) => {
                                         <div class="h-full absolute inset-0 bg-gradient-to-r from-gray-200 via-white to-gray-200 animate-glass"></div>
                                     </div>
                                 </td>
-                                <td class="p-2">
-                                    <div class="h-8 bg-gray-200 rounded-full overflow-hidden relative">
-                                        <div class="h-full absolute inset-0 bg-gradient-to-r from-gray-200 via-white to-gray-200 animate-glass"></div>
-                                    </div>
-                                </td>
+                                
                             </tr>
 
                         </>
@@ -162,11 +145,9 @@ const ProfileTable = ({ type, setWholeData, user }) => {
                     }
                 </tbody>
             </table>
-            </div>
-
-            {memoShowDataTable && <DataTableDisplay data={[selectedFeed]} />}
+            {memoShowDataTable && <Regenerate data={[selectedFeed]} />}
         </>
     )
 }
 
-export default ProfileTable
+export default WholeBookTable

@@ -66,7 +66,7 @@ const Feeds = ({user}) => {
                                 feeds.map((feed, i) => (
                                     <tr key={feed.id} className="mb-2">
                                         <td className="p-2 text-sm border capitalize">{feed.book_name}</td>
-                                        <td className="p-2 text-sm text-gray-600 border">{feed.timestamps.includes(':') ? feed.timestamps : timeFormator(feed.timestamps)}</td>
+                                        <td className="p-2 text-sm text-gray-600 border word-break-all">{feed.timestamps.includes(':') ? feed.timestamps : timeFormator(feed.timestamps)}</td>
                                         <td className={`p-2 text-sm  flex justify-center ${i == 0 ? '' : 'border-t'}`} >
                                             <button className='bg-blue-500 hover:bg-blue-700 text-white mx-auto  font-bold py-2 px-4 rounded' onClick={() => regenerateNote(feed)}>Regenerate Notes</button>
                                         </td>

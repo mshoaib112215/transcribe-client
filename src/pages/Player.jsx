@@ -62,10 +62,7 @@ function Player({ user }) {
             const relevantSegment = obj?.result?.segments.find(({ start, end }) =>
                 currentTime >= (start + current_time) && currentTime <= (end + current_time)
             );
-            // console.log(obj?.result?.segments.find(({ start, end }) => {
-            //     console.log(currentTime >= (start + current_time) && currentTime <= (end + current_time), " for ", (start + current_time), " ", end)
-            //     return currentTime >= (start + current_time) && currentTime <= (end + current_time)
-            // }))
+            
 
             if (relevantSegment) {
                 if (processedSeg.some(seg => seg.time.start === relevantSegment.start + current_time && seg.highlighted)) {
@@ -485,7 +482,9 @@ function Player({ user }) {
     };
 
     const transcribe = useCallback(async () => {
+
         if (audioFile) {
+            
             if (timeStamps.length === 0) {
                 toast.error("Please add time stamps")
                 return
