@@ -1,36 +1,125 @@
-import React from 'react'
-import TimestampsFileInput from './TimestampsFileInput'
+import React, { useCallback, useEffect, useState } from 'react'
+import MappedTimestampInput from './MappedTimestampInput';
+import kmp_matcher from 'kmp-matcher';
 
-const Regenerate = ({data}) => {
-    // const [data, setData] = useState([]);
+const Regenerate = ({ selectedData }) => {
+    // const [selectedData, setselectedData] = useState([]);
     const [timestampsFile, setTimestampsFile] = useState(null);
     const [timeStamps, setTimeStamps] = useState([])
-    const [transcription, setTranscription] = useState('');
+    const [transcription, setTranscription] = useState(selectedData.transcription);
     const [searches, setSearches] = useState([]);
     const [isCaputed, setIsCaputed] = useState(false);
+    const [data, setData] = useState([]);
 
-    useEffect(() => {
-        if ( data.pdfText.length > 0) {
-            const allPageText = data.pdfText?.map((page) => page.textInfo).join(' ');
-            if (data.transcription.length > 0) {
-                const searchPromises = data.transcription?.map(async (searchTerm) => {
-                    const result = await searchPDF(allPageText, searchTerm.text);
-                    return result;
+    function timestampToSeconds(timestamp) {
+        // Check if the timestamp contains a colon (:) to determine if it's in the format "HH:MM:SS"
+        if (timestamp.includes(':')) {
+            // Split the timestamp into hours, minutes, and seconds
+            const [sign, hours, minutes, seconds] = timestamp.split(':').map(Number);
+
+            // Determine if the timestamp is negative
+            const isNegative = sign === '-';
+
+            // If the timestamp is in the format "HH:MM:SS", convert it to seconds
+            if (!isNaN(hours) && !isNaN(minutes) && !isNaN(seconds)) {
+                const multiplier = isNegative ? -1 : 1;
+                const totalSeconds = multiplier * (Math.abs(hours) * 3600 + Math.abs(minutes) * 60 + Math.abs(seconds));
+                return totalSeconds;
+            }
+        }
+
+        // If the timestamp is not in the format "HH:MM:SS" or contains a float/number, return it as is
+        return timestamp;
+    }
+
+    const getTransSegs = (transcription) => {
+        const transcriptions = [];
+
+        timeStamps.forEach((startingTimestamp) => {
+            const start = timestampToSeconds(startingTimestamp);
+            const duration = 50
+            const end = start + parseFloat(duration);
+
+            let startSegment = null;
+            const endSegments = [];
+
+            transcription.segments.forEach((seg) => {
+                if (seg.start <= start && start <= seg.end) {
+                    startSegment = seg;
+                    return
+                }
+                if (start <= seg.start && seg.start <= end && end <= seg.end) {
+                    endSegments.push(seg);
+                }
+
+                if (start <= seg.start && seg.start <= end) {
+                    endSegments.push(seg);
+                }
+
+                if (start + parseFloat(duration) < seg.end) {
+                    return;
+                }
+
+                if (startSegment) {
+                    endSegments.push(seg);
+                }
+            });
+
+            if (startSegment) {
+                const segments = [];
+                let text = "";
+
+                segments.push(startSegment);
+                text += startSegment.text;
+
+                endSegments.forEach((segment) => {
+                    segments.push(segment);
+                    text += segment.text;
                 });
 
-                Promise.all(searchPromises)
-                    .then(results => {
-                        console.log(results)
-                        setSearches(results);
+                transcriptions.push({ start: start, text: text });
+            } else {
+                transcriptions.push({ start: start, text: "" });
+            }
+        });
+
+        return transcriptions;
+    };
+
+    
+
+    useEffect(() => {
+        console.log(searches)
+        if (timestampsFile) {
+            setSearches([])
+            const trans = JSON.parse(selectedData[0].transcription)
+
+            // if (selectedData.length > 0) {
+            const allPageText = JSON.parse(selectedData[0].book_text)?.map((page) => page.textInfo).join(' ');
+            // console.log(allPageText)
+
+            // const searchPromises = trans?.map(async (searchTerm) => {
+
+            //     return result;
+            // });
+            const seg = getTransSegs(trans)
+            timeStamps.forEach((startingTimestamp, i) => {
+                searchPDF(allPageText,seg[i].text)
+                    .then(resultText => {
+                    
+                        setSearches(prev => [...prev, { searchTerm: seg[i].text, result : resultText}]);
+                        console.log('got values of search')
                     })
                     .catch(error => {
                         console.error("Error during search:", error);
                     });
-            }
+            });
         }
+        // }
         // }, [ segmentsText]);
-    }, [transcription, pdfText]);
-    
+    }, [transcription, selectedData, timestampsFile, timeStamps]);
+    // }, []);
+
     const searchPDF = useCallback(async (pdfText, searchTerm) => {
         const searchResults = [];
         let starter = 0;
@@ -115,7 +204,7 @@ const Regenerate = ({data}) => {
     };
     return (
         <>
-            <TimestampsFileInput handleFileChange={handleTimestampsFileChange} timestampsFile={timestampsFile} setTimeStamps={setTimeStamps} transcription={data.transcription} searches={searches} setData={setData} data={data} timeStamps={timeStamps} setIsCaputed={setIsCaputed} />
+            <MappedTimestampInput handleFileChange={handleTimestampsFileChange} timestampsFile={timestampsFile} setTimeStamps={setTimeStamps} transcription={data.transcription} searches={searches} setData={setData} data={data} timeStamps={timeStamps} setIsCaputed={setIsCaputed} />
         </>
     )
 }

@@ -485,14 +485,14 @@ function Player({ user }) {
 
         if (audioFile) {
             
-            if (timeStamps.length === 0) {
-                toast.error("Please add time stamps")
-                return
-            }
             if (bookName == null) {
                 console.log(bookName)
                 toast.error("Cannot get Book name")
                 return
+            }
+            if (timeStamps.length === 0) {
+                toast.success("Your Files sending for Entire Mapping Process!")
+                
             }
             const formData = new FormData();
             

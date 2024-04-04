@@ -47,6 +47,7 @@ const Feeds = ({user}) => {
 
                 <Link to="/player" className="text-white   bg-blue-500 px-4 py-2  rounded-md ">Go to Player</Link>
                 <Link to="/profile" className="text-white   bg-blue-500 px-4 py-2 rounded-md ">Go to Profile</Link>
+                <Link to="/mapped-books/" className="text-white   bg-blue-500 px-4 py-2 rounded-md ">Go to Mapped Books</Link>
             </div>
             <div className=" p-4 ">
 

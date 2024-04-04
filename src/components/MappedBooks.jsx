@@ -6,7 +6,7 @@ const MappedBooks = () => {
     const [data, setData] = useState([])
     useEffect(() => {
         const fetchData = async () => {
-            const res = await fetch('https://www.noteclimber.com/noteclimberConnection.php/api/get-all-whole-trans', {
+            const res = await fetch('http/noteclimberConnection.php/api/get-all-whole-trans', {
             // const res = await fetch('https://www.noteclimber.com/noteclimberConnection.php/api/get-all-whole-trans', {
                 method: 'GET',
             })
@@ -29,7 +29,8 @@ const MappedBooks = () => {
             <div className="flex justify-start gap-3">
 
                 <Link to="/" className="text-white   bg-blue-500 px-4 py-2  rounded-md ">Go to Home</Link>
-                <Link to="//mapped-books/queue" className="text-white   bg-blue-500 px-4 py-2 rounded-md ">Go to Pending Books</Link>
+                
+                <Link to="/profile" className="text-white   bg-blue-500 px-4 py-2 rounded-md ">Go to Profile</Link>
             </div>
             <div className="container m-auto p-3">
 

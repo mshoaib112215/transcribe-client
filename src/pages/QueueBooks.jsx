@@ -9,6 +9,7 @@ const QueueBooks = ({ user, setWholeData, wholeData}) => {
 
                 <Link to="/" className="text-white   bg-blue-500 px-4 py-2  rounded-md ">Go to Home</Link>
                 <Link to="/profile" className="text-white   bg-blue-500 px-4 py-2 rounded-md ">Go to Profile</Link>
+                <Link to="/player" className="text-white   bg-blue-500 px-4 py-2  rounded-md ">Go to player</Link>
             </div>
             <div className="container m-auto p-3">
 

@@ -8,7 +8,8 @@ const Profile = ({ user, setWholeData, wholeData}) => {
             <div className="flex justify-start gap-3">
 
                 <Link to="/" className="text-white   bg-blue-500 px-4 py-2  rounded-md ">Go to Home</Link>
-                <Link to="/profile/queue" className="text-white   bg-blue-500 px-4 py-2 rounded-md ">Go to Pending Books</Link>
+                <Link to="/player" className="text-white   bg-blue-500 px-4 py-2  rounded-md ">Go to player</Link>
+                <Link to="/mapped-books/" className="text-white   bg-blue-500 px-4 py-2 rounded-md ">Go to Mapped Books</Link>
             </div>
             <div className="container m-auto p-3">
 
@@ -26,6 +27,7 @@ const Profile = ({ user, setWholeData, wholeData}) => {
                             Your Pending Books: <span className='text-xl'>{wholeData.filter(d => !d.status.includes('100') && d.user_id == user.id).length.toString()}</span>
                         </div>
                     </Link>
+                    
                 </div>
                 <div className='mt-4'>
 
