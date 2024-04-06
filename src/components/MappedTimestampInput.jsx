@@ -41,7 +41,7 @@ const MappedTimestampInput = ({ handleFileChange, timestampsFile, setTimeStamps,
             if (filteredSearches.length > 0) {
 
                 setData(prevData => prevData.map((subArray, index) => {
-                    return [...subArray, (filteredSearches[index]?.searchTerm) || "", (filteredSearches[index].result) || ""]
+                    return [...subArray, (filteredSearches[index]?.searchTerm) || "", (filteredSearches[index]?.result) || ""]
                 }));
             }
         }

@@ -1,6 +1,9 @@
-import React, { useCallback, useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import MappedTimestampInput from './MappedTimestampInput';
 import kmp_matcher from 'kmp-matcher';
+import AudioPlayer from "react-audio-player";
+import FileInput from './FileInput';
+import { toast } from 'react-toastify';
 
 const Regenerate = ({ selectedData }) => {
     // const [selectedData, setselectedData] = useState([]);
@@ -36,7 +39,7 @@ const Regenerate = ({ selectedData }) => {
         const transcriptions = [];
 
         timeStamps.forEach((startingTimestamp) => {
-            const start = timestampToSeconds(startingTimestamp);
+            const start = isCaputed ? startingTimestamp : timestampToSeconds(startingTimestamp);
             const duration = 50
             const end = start + parseFloat(duration);
 
@@ -86,35 +89,38 @@ const Regenerate = ({ selectedData }) => {
         return transcriptions;
     };
 
-    
+
 
     useEffect(() => {
-        console.log(searches)
-        if (timestampsFile) {
-            setSearches([])
-            const trans = JSON.parse(selectedData[0].transcription)
-
-            // if (selectedData.length > 0) {
-            const allPageText = JSON.parse(selectedData[0].book_text)?.map((page) => page.textInfo).join(' ');
-            // console.log(allPageText)
-
-            // const searchPromises = trans?.map(async (searchTerm) => {
-
-            //     return result;
-            // });
-            const seg = getTransSegs(trans)
-            timeStamps.forEach((startingTimestamp, i) => {
-                searchPDF(allPageText,seg[i].text)
-                    .then(resultText => {
-                    
-                        setSearches(prev => [...prev, { searchTerm: seg[i].text, result : resultText}]);
-                        console.log('got values of search')
-                    })
-                    .catch(error => {
-                        console.error("Error during search:", error);
-                    });
-            });
+        console.log(timeStamps.length)
+        if (!timeStamps.length > 0) {
+            return
         }
+        // if (timestampsFile && timeStamps.length <= 0) {
+        setSearches([])
+        const trans = JSON.parse(selectedData[0].transcription)
+
+        // if (selectedData.length > 0) {
+        const allPageText = JSON.parse(selectedData[0].book_text)?.map((page) => page.textInfo).join(' ');
+        // console.log(allPageText)
+
+        // const searchPromises = trans?.map(async (searchTerm) => {
+
+        //     return result;
+        // });
+        const seg = getTransSegs(trans)
+        timeStamps.forEach((startingTimestamp, i) => {
+            searchPDF(allPageText, seg[i].text)
+                .then(resultText => {
+
+                    setSearches(prev => [...prev, { searchTerm: seg[i].text, result: resultText }]);
+                    console.log('got values of search')
+                })
+                .catch(error => {
+                    console.error("Error during search:", error);
+                });
+        });
+        // }
         // }
         // }, [ segmentsText]);
     }, [transcription, selectedData, timestampsFile, timeStamps]);
@@ -202,8 +208,86 @@ const Regenerate = ({ selectedData }) => {
             reader.readAsBinaryString(file);
         }
     };
+    const handleAudioFileChange = (event) => {
+        setAudioFile(event.target.files[0]);
+    };
+    const audioPlayerRef = useRef(null);
+    const [timeStampsType, setTimeStampsType] = useState("end");
+    const [audioFile, setAudioFile] = useState(null);
+    const [capturedTimeStamps, setCapturedTimeStamps] = useState([]);
+    const handleRadioChange = (event) => {
+        setTimeStampsType(event.target.id);
+    };
+    const audioData = useMemo(() => {
+        return audioFile != null ? URL.createObjectURL(audioFile) : null;
+    }, [audioFile]);
+    useEffect(() => {
+        setTimeStamps((prev) => [...capturedTimeStamps]);
+        setIsCaputed(true);
+    }, [capturedTimeStamps]);
+    const captureTimestamp = useCallback(() => {
+        setCapturedTimeStamps((prev) => [...prev, audioPlayerRef?.current.audioEl.current.currentTime]);
+        toast.success(audioPlayerRef.current?.audioEl.current.currentTime + " Added in the timestamps list");
+    }, [audioPlayerRef.current?.audioEl.current.currentTime]);
     return (
         <>
+            <div className='flex flex-col gap-4 max-w-md mx-auto mt-12'>
+
+                <FileInput acceptedFileTypes=".mp3" label="Upload Audio File" handleFileChange={handleAudioFileChange} />
+                <h2 className="text-l font-bold">TimeStamps Type</h2>
+
+                <div>
+
+                    <div className="flex gap-2 items-center">
+                        <input
+                            type="radio"
+                            name="timeStamps_type"
+                            id="end"
+                            disabled={isCaputed}
+
+                            checked={timeStampsType === 'end'}
+                            onChange={handleRadioChange}
+                        />
+                        <label htmlFor="end" className={isCaputed ? "line-through" : ""}> Duration from the End</label>
+                    </div>
+                    <div className="flex gap-2 items-center">
+                        <input
+                            disabled={isCaputed}
+                            type="radio"
+                            name="timeStamps_type"
+                            id="start"
+
+                            checked={timeStampsType === 'start'}
+                            onChange={handleRadioChange}
+                        />
+                        <label htmlFor="start" className={isCaputed ? "line-through" : ""}> Duration from the Start</label>
+                    </div>
+                </div>
+                <AudioPlayer
+                    ref={audioPlayerRef}
+                    src={audioData}
+                    controls={true}
+                    listenInterval={100}
+                    showJumpControls={false}
+                    customAdditionalControls={[]}
+                    className="sticky top-14 max-w-md z-50"
+                    style={{ width: '100%' }}
+                    customProgressBarSection={[
+                        <div>
+                            <span className="custom-time">0:00</span>
+                        </div>,
+                        <div>
+                            <progress className="react-audio-player-progress" value={0} max={100} />
+                        </div>,
+                        <div>
+                            <span className="custom-time">0:00</span>
+                        </div>,
+                    ]}
+                />
+                <button type="button" className="bg-blue-500 disabled:bg-blue-300 disabled:cursor-not-allowed text-white py-2 px-4 rounded" onClick={() => captureTimestamp()}>Capture Timestamp</button>
+                <button type="button" className="bg-blue-500 text-white py-2 px-4 rounded w-full max-w-md" onClick={() => { setTimeStamps([]); setData([]); setTranscription([]); setSearches([]); setTimestampsFile(null); document.getElementById("timestamps-file").value = null; setIsCaputed(false); setCapturedTimeStamps([]) }}>Clear Data Table</button>
+
+            </div>
             <MappedTimestampInput handleFileChange={handleTimestampsFileChange} timestampsFile={timestampsFile} setTimeStamps={setTimeStamps} transcription={data.transcription} searches={searches} setData={setData} data={data} timeStamps={timeStamps} setIsCaputed={setIsCaputed} />
         </>
     )

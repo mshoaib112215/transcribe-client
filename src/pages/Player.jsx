@@ -682,7 +682,7 @@ function Player({ user }) {
                     <button type="button" disabled={!allDone} className="bg-blue-500 text-white py-2 px-4 rounded w-full disabled:bg-blue-400 disabled:cursor-not-allowed" onClick={() => { transcribe() }}>Transcribe</button>
                 </div>
                 <PDFReader ebookFile={ebookFile} setSearches={setSearches} searches={searches} transcription={transcription} allDone={allDone} setAllDone={setAllDone} pdfText={pdfText} setPdfText={setPdfText} segmentsText={segmentsText} setNumPages={setNumPages} numPages={numPages} />
-                <button type="button" className="bg-blue-500 text-white py-2 px-4 rounded w-full max-w-md" onClick={() => { setTimeStamps([]); setData([]); setTranscription([]); setSearches([]); setTimestampsFile(null); document.getElementById("timestamps-file").value = null; setIsCaputed(false) }}>Clear Data Table</button>
+                <button type="button" className="bg-blue-500 text-white py-2 px-4 rounded w-full max-w-md" onClick={() => { setTimeStamps([]); setData([]); setTranscription([]); setSearches([]); setTimestampsFile(null); document.getElementById("timestamps-file").value = null; setIsCaputed(false); setCapturedTimeStamps([]); }}>Clear Data Table</button>
 
                 <TimestampsFileInput handleFileChange={handleTimestampsFileChange} timestampsFile={timestampsFile} setTimeStamps={setTimeStamps} transcription={transcription} searches={searches} setData={setData} data={data} timeStamps={timeStamps} setIsCaputed={setIsCaputed} />
             </div>

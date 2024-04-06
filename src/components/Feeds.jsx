@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react'
 import DataTableDisplay from './DataTableDisplay'
 import { toast } from 'react-toastify'
 import { Link } from 'react-router-dom'
+import { getTrans } from '../internal'
+import { updateGetTransRes } from '../utils'
 
 const Feeds = ({user}) => {
     const [feeds, setFeeds] = useState([])
@@ -11,13 +13,15 @@ const Feeds = ({user}) => {
 
     useEffect(() => {
         setLoading(true)
-        const fetchFeeds = async () => {
-            const res = await fetch('https://www.noteclimber.com/noteclimberConnection.php/api/get-trans', {
-                method: 'GET',
-            })
+        const fetchFeeds = async() => {
+            // const res = await fetch('https://www.noteclimber.com/noteclimberConnection.php/api/get-trans', {
+            //     method: 'GET',
+            // })
             
-            const data = await res.json();
-            setFeeds(data.filter(d => d.status.includes('100') ))
+            const data = await getTrans();
+            const newData = updateGetTransRes(data)
+            // console.log(data)
+            setFeeds(newData.filter(d => d.status.includes('100') ))
             setLoading(false)
         }
         fetchFeeds();
