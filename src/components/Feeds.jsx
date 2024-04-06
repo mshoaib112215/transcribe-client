@@ -5,28 +5,46 @@ import { Link } from 'react-router-dom'
 import { getTrans } from '../internal'
 import { updateGetTransRes } from '../utils'
 
-const Feeds = ({user}) => {
-    const [feeds, setFeeds] = useState([])
+const Feeds = ({ user, feeds, setFeeds }) => {
+
     const [showDataTable, setShowDataTable] = useState(false)
     const [selectedFeed, setSelectedFeed] = useState({})
     const [loading, setLoading] = useState(false)
 
     useEffect(() => {
-        setLoading(true)
-        const fetchFeeds = async() => {
+        const fetchFeeds = async () => {
             // const res = await fetch('https://www.noteclimber.com/noteclimberConnection.php/api/get-trans', {
             //     method: 'GET',
             // })
-            
+
             const data = await getTrans();
             const newData = updateGetTransRes(data)
             // console.log(data)
-            setFeeds(newData.filter(d => d.status.includes('100') ))
+            setFeeds(newData.filter(d => d.status.includes('100')))
             setLoading(false)
         }
-        fetchFeeds();
+        if (feeds?.length <= 0 || feeds == undefined) {
+            setLoading(true)
+
+            fetchFeeds();
+
+        }
+        else {
+            let newData = null
+
+            newData = feeds?.filter(d => d.status.includes('100'))
+
+            setFeeds(newData)
+
+        }
         setShowDataTable(false);
         setSelectedFeed({});
+        const timer = setInterval(() => {
+            fetchFeeds();
+            // setSelectedFeed({});
+        }, 30000); // 3000 milliseconds = 3 seconds
+
+        return () => clearInterval(timer);
     }, [])
 
     const timeFormator = (time) => {
@@ -50,7 +68,7 @@ const Feeds = ({user}) => {
             <div className="flex justify-start gap-3">
 
                 <Link to="/player" className="text-white   bg-blue-500 px-4 py-2  rounded-md ">Go to Player</Link>
-                <Link to="/profile" className="text-white   bg-blue-500 px-4 py-2 rounded-md ">Go to Profile</Link>
+                <Link to="/profile/completed" className="text-white   bg-blue-500 px-4 py-2 rounded-md ">Go to Profile</Link>
                 <Link to="/mapped-books/" className="text-white   bg-blue-500 px-4 py-2 rounded-md ">Go to Mapped Books</Link>
             </div>
             <div className=" p-4 ">
@@ -67,7 +85,7 @@ const Feeds = ({user}) => {
 
                     <tbody>
                         {!loading ?
-                            feeds.length > 0 ?
+                            feeds?.length > 0 ?
                                 feeds.map((feed, i) => (
                                     <tr key={feed.id} className="mb-2">
                                         <td className="p-2 text-sm border capitalize">{feed.book_name}</td>
@@ -83,40 +101,40 @@ const Feeds = ({user}) => {
                                 </tr>
                             :
                             <>
-                            <tr>
-                                <td class="p-2">
-                                    <div class="h-8 bg-gray-200 rounded-full overflow-hidden relative">
-                                        <div class="h-full absolute inset-0 bg-gradient-to-r from-gray-200 via-white to-gray-200 animate-glass"></div>
-                                    </div>
-                                </td>
-                                <td class="p-2">
-                                    <div class="h-8 bg-gray-200 rounded-full overflow-hidden relative">
-                                        <div class="h-full absolute inset-0 bg-gradient-to-r from-gray-200 via-white to-gray-200 animate-glass"></div>
-                                    </div>
-                                </td>
-                                <td class="p-2">
-                                    <div class="h-8 bg-gray-200 rounded-full overflow-hidden relative">
-                                        <div class="h-full absolute inset-0 bg-gradient-to-r from-gray-200 via-white to-gray-200 animate-glass"></div>
-                                    </div>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td class="p-2">
-                                    <div class="h-8 bg-gray-200 rounded-full overflow-hidden relative">
-                                        <div class="h-full absolute inset-0 bg-gradient-to-r from-gray-200 via-white to-gray-200 animate-glass"></div>
-                                    </div>
-                                </td>
-                                <td class="p-2">
-                                    <div class="h-8 bg-gray-200 rounded-full overflow-hidden relative">
-                                        <div class="h-full absolute inset-0 bg-gradient-to-r from-gray-200 via-white to-gray-200 animate-glass"></div>
-                                    </div>
-                                </td>
-                                <td class="p-2">
-                                    <div class="h-8 bg-gray-200 rounded-full overflow-hidden relative">
-                                        <div class="h-full absolute inset-0 bg-gradient-to-r from-gray-200 via-white to-gray-200 animate-glass"></div>
-                                    </div>
-                                </td>
-                            </tr>
+                                <tr>
+                                    <td class="p-2">
+                                        <div class="h-8 bg-gray-200 rounded-full overflow-hidden relative">
+                                            <div class="h-full absolute inset-0 bg-gradient-to-r from-gray-200 via-white to-gray-200 animate-glass"></div>
+                                        </div>
+                                    </td>
+                                    <td class="p-2">
+                                        <div class="h-8 bg-gray-200 rounded-full overflow-hidden relative">
+                                            <div class="h-full absolute inset-0 bg-gradient-to-r from-gray-200 via-white to-gray-200 animate-glass"></div>
+                                        </div>
+                                    </td>
+                                    <td class="p-2">
+                                        <div class="h-8 bg-gray-200 rounded-full overflow-hidden relative">
+                                            <div class="h-full absolute inset-0 bg-gradient-to-r from-gray-200 via-white to-gray-200 animate-glass"></div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="p-2">
+                                        <div class="h-8 bg-gray-200 rounded-full overflow-hidden relative">
+                                            <div class="h-full absolute inset-0 bg-gradient-to-r from-gray-200 via-white to-gray-200 animate-glass"></div>
+                                        </div>
+                                    </td>
+                                    <td class="p-2">
+                                        <div class="h-8 bg-gray-200 rounded-full overflow-hidden relative">
+                                            <div class="h-full absolute inset-0 bg-gradient-to-r from-gray-200 via-white to-gray-200 animate-glass"></div>
+                                        </div>
+                                    </td>
+                                    <td class="p-2">
+                                        <div class="h-8 bg-gray-200 rounded-full overflow-hidden relative">
+                                            <div class="h-full absolute inset-0 bg-gradient-to-r from-gray-200 via-white to-gray-200 animate-glass"></div>
+                                        </div>
+                                    </td>
+                                </tr>
 
                             </>
 

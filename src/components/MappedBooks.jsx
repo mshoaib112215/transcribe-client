@@ -2,35 +2,36 @@ import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import WholeBookTable from './WholeBookTable';
 
-const MappedBooks = () => {
-    const [data, setData] = useState([])
-    useEffect(() => {
-        const fetchData = async () => {
-            const res = await fetch('http/noteclimberConnection.php/api/get-all-whole-trans', {
-            // const res = await fetch('https://www.noteclimber.com/noteclimberConnection.php/api/get-all-whole-trans', {
-                method: 'GET',
-            })
-            const data = await res.json();
-            setData(data)
+const MappedBooks = ({setWholeData, wholeData}) => {
+    
+    // useEffect(() => {
+    //     const fetchData = async () => {
+    //         const res = await fetch('http/noteclimberConnection.php/api/get-all-whole-trans', {
+    //         // const res = await fetch('https://www.noteclimber.com/noteclimberConnection.php/api/get-all-whole-trans', {
+    //             method: 'GET',
+    //         })
+    //         const data = await res.json();
+    //         setData(data)
 
-            // setLoading(false)
-        }
-        fetchData();
-        // setShowDataTable(false);
-        const timer = setInterval(() => {
-            fetchData();
-            // setSelectedFeed({});
-        }, 10000); // 3000 milliseconds = 3 seconds
+    //         // setLoading(false)
+    //     }
+    //     fetchData();
+    //     // setShowDataTable(false);
+    //     const timer = setInterval(() => {
+    //         fetchData();
+    //         // setSelectedFeed({});
+    //     }, 10000); // 3000 milliseconds = 3 seconds
 
-        return () => clearInterval(timer);
-    }, []);
+    //     return () => clearInterval(timer);
+    // }, []);
+
     return (
         <>
             <div className="flex justify-start gap-3">
 
                 <Link to="/" className="text-white   bg-blue-500 px-4 py-2  rounded-md ">Go to Home</Link>
                 
-                <Link to="/profile" className="text-white   bg-blue-500 px-4 py-2 rounded-md ">Go to Profile</Link>
+                <Link to="/profile/completed" className="text-white   bg-blue-500 px-4 py-2 rounded-md ">Go to Profile</Link>
             </div>
             <div className="container m-auto p-3">
 
@@ -40,19 +41,19 @@ const MappedBooks = () => {
 
                     <Link to='/mapped-books' className='border shadow-md flex-1 p-12 flex justify-center rounded-lg cursor-pointer'>
                         <div className='flex items-center gap-2'>
-                            Your Completed Books: <span className='text-xl'>{data.filter(d => d.status.includes('100')).length.toString()}</span>
+                            Your Completed Books: <span className='text-xl'>{wholeData?.filter(d => d.status.includes('100')).length.toString()}</span>
                             
                         </div>
                     </Link>
                     <Link to='/mapped-books/queue' className='border shadow-md flex-1 flex justify-center p-12 rounded-lg cursor-pointer'>
                         <div className='flex items-center gap-2'>
-                            Your Pending Books: <span className='text-xl'>{data.filter(d => !d.status.includes('100') ).length.toString()}</span>
+                            Your Pending Books: <span className='text-xl'>{wholeData?.filter(d => !d.status.includes('100') ).length.toString()}</span>
                         </div>
                     </Link>
                 </div>
                 <div className='mt-4'>
 
-                    <WholeBookTable type="1" setWholeData={setData} />
+                    <WholeBookTable type="1" setWholeData={setWholeData} wholeData={wholeData} />
                 </div>
             </div>
 

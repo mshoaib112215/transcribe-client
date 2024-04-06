@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import Regenerate from './Regenerate'
 
-const WholeBookTable = ({type = "1", setWholeData}) => {
+const WholeBookTable = ({ type = "1", setWholeData, wholeData }) => {
     const [data, setData] = useState([])
 
     const [showDataTable, setShowDataTable] = useState(false)
@@ -29,14 +29,31 @@ const WholeBookTable = ({type = "1", setWholeData}) => {
             setWholeData(data)
             setLoading(false)
         }
-        fetchData();
-        setShowDataTable(false);
-        // const timer = setInterval(() => {
-        //     fetchData();
-        //     // setSelectedFeed({});
-        // }, 10000); // 3000 milliseconds = 3 seconds
 
-        // return () => clearInterval(timer);
+        console.log(wholeData?.length)
+        if (wholeData?.length <= 0 || wholeData == undefined) {
+
+            fetchData();
+            setShowDataTable(false);
+
+        }
+        else {
+            let newData = null
+            if (type == 1) {
+                newData = wholeData?.filter(d => d.status.includes('100'))
+            }
+            else {
+                newData = wholeData?.filter(d => !d.status.includes('100'))
+            }
+            setData(newData)
+
+        }
+        const timer = setInterval(() => {
+            fetchData();
+            // setSelectedFeed({});
+        }, 30000); // 3000 milliseconds = 3 seconds
+
+        return () => clearInterval(timer);
     }, []);
     const regenerateNote = (feed) => {
         setSelectedFeed(feed)
@@ -61,7 +78,7 @@ const WholeBookTable = ({type = "1", setWholeData}) => {
 
                 <tbody>
                     {!loading ?
-                        data.length > 0 ?
+                        data?.length > 0 ?
                             data.map((feed, i) => (
                                 <tr key={feed.id} className="mb-2">
                                     <td className="p-2 text-sm border capitalize">{feed.audio_book_name}</td>

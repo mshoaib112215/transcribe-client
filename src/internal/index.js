@@ -2,11 +2,15 @@
 // for all APIs related functions.
 const root_url = "https://www.noteclimber.com/noteclimberConnection.php/api";
 
-export const getTrans = async () => {
+export const getTrans = async (user_id = "all") => {
     try {
-        const res = await fetch(root_url + "/get-trans");
+
+
+        const res = await fetch(root_url + "/get-trans?id=" + user_id);
         const data = await res.json();
         return data;
+
+        
     } catch (err) {
         console.error(err);
         throw err;
@@ -18,7 +22,7 @@ export const universalRequest = async (method, endpoint) => {
         headers: {
             'Content-Type': 'application/json'
         },
-        body: JSON.stringify({data})
+        body: JSON.stringify({ data })
     })
     const data = await response.json()
     return data
