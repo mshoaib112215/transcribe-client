@@ -8,8 +8,10 @@ import { utils, write } from "xlsx";
 
 const DataTableDisplay = ({ data }) => {
     const [specificKeysData, setSpecificKeysData] = useState([]);
-    const [loading, setLoading] = useState(false);
-
+    const [loading, setLoading] = useState(0);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [perPage, setPerPage] = useState(10);
+    const rowsPerPage = 10;
     const timeFormator = (time) => {
         if (time.includes(':'))
             return time
@@ -21,34 +23,41 @@ const DataTableDisplay = ({ data }) => {
         catch (er) {
             toast.error("Error will converting time " + er + time)
         }
-    }   
+    }
 
     useEffect(() => {
         const fetchData = async () => {
             setLoading(true)
-            const updatedData = await Promise.all(data?.map(async ({ timestamps, book_name, transcriptions, book_text }) => {
+            setSpecificKeysData([])
+            for (const { timestamps, book_name, transcriptions, book_text } of data) {
                 const timestampsArray = timestamps?.split(',');
-                const updatedArray = timestampsArray.map((timestamp, i) => {
-                    console.log(JSON.parse(transcriptions))
-                    let searchTerm = JSON.parse(transcriptions)[timestampsArray.indexOf(timestamp)]?.text || "";
+                for (let i = 0; i < timestampsArray.length; i++) {
+                    const timestamp = timestampsArray[i];
+                    let searchTerm = JSON.parse(transcriptions)[i]?.text || "";
                     const pdfText = JSON.parse(book_text).map((page) => page.textInfo.replace(/<br>/g, " ")).join(' ');
 
                     let searchResult = searchPDF(pdfText, searchTerm);
-                    searchTerm == "" ? searchResult = "" : searchResult
-                    return [book_name, timeFormator(timestamp), searchTerm, searchResult];
-                });
+                    searchTerm == "" ? searchResult = "" : searchResult;
+                    const processedData = [book_name, timeFormator(timestamp), searchTerm, searchResult];
+                    console.log(timestamp)
+                    // Update state with the new processed data
+                    console.log(specificKeysData)
+                    setSpecificKeysData(prevData => {
+                        const updatedData = prevData.some(d => timeFormator(d[1]) === processedData[1]) ?
+                            prevData.map(d => timeFormator(d[1]) === processedData[1] ? processedData : d) :
+                            [...prevData, processedData];
 
-                return updatedArray;
-            }));
-            console.log(updatedData)
-            // updatedData making it AOA
-            const AOAData = updatedData.reduce((acc, curr) => {
-                return acc.concat(curr);
-            })
-            setLoading(false)
-            setSpecificKeysData(AOAData);
+                        return updatedData;
+                    });
+
+                    // update loading bar's width %
+                    setLoading(i / timestampsArray.length * 100);
+                    // Pause for 300ms before processing the next timestamp
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                }
+            }
+            setLoading(false);
         };
-        console.log(data)
         fetchData();
     }, [data]);
     // const specificKeysData = data.map(({ timestamps, book_name }) =  > [book_name, timestamps]);
@@ -153,30 +162,41 @@ const DataTableDisplay = ({ data }) => {
     }
     return (
 
-        loading ?
-            <div>Loading...</div>
-            :
-            <>
-                <div className="w-full mt-4">
-                    <h2 className="text-xl font-semibold mb-2">Table View</h2>
-                    <button
-                        type="button"
-                        onClick={downloadXLSX}
-                        className="bg-blue-500 text-white py-2 px-4 rounded"
-                    >
-                        Download as XLSX
-                    </button>
-                    <div className="w-full h-[50vh] mt-4">
-                        <DataTable
-                            columns={columns}
-                            data={specificKeysData}
-                            responsive
-                            pagination
-                            className="rounded-lg overflow-hidden shadow-md"
-                        />
+        // loading ?
+        //     <div>Loading...</div>
+        //     :
+        <>
+            <div className="w-full mt-4">
+                <h2 className="text-xl font-semibold mb-2">Table View</h2>
+                <button
+                    type="button"
+                    onClick={downloadXLSX}
+                    className="button"
+                >
+                    Download as XLSX
+                </button>
+                {loading && typeof loading === 'number' && loading !== 100 && (
+                    <div>
+                        Regenerating Notes ({loading.toFixed(0)}%)
+                        <div className='relative h-[10px] bg-gray-300 rounded-full'>
+                            <div className='h-[10px] bg-blue-500 rounded-full' style={{ width: `${loading}%` }}></div>
+                        </div>
                     </div>
+                )}
+
+                <div className="w-full h-[50vh] mt-4">
+                    <DataTable
+                        columns={columns}
+                        data={specificKeysData.slice((currentPage - 1) * rowsPerPage, currentPage * rowsPerPage)}
+                        pagination
+                        paginationServer
+                        paginationTotalRows={data.length}
+                        onChangePage={(currentPage) => setCurrentPage(currentPage)}
+                        paginationRowsPerPageOptions={[10, 20, 30]}
+                    />
                 </div>
-            </>
+            </div>
+        </>
     );
 
 };

@@ -1,4 +1,7 @@
 // This file exports all APIs related functions. It is a single point of entry
+
+import { toast } from "react-toastify";
+
 // for all APIs related functions.
 const root_url = "https://www.noteclimber.com/noteclimberConnection.php/api";
 
@@ -13,6 +16,7 @@ export const getTrans = async (user_id = "all") => {
         
     } catch (err) {
         console.error(err);
+        toast.error("Error in fetching Feeds");
         throw err;
     }
 }

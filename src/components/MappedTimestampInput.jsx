@@ -1,11 +1,12 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { read, utils, write } from "xlsx";
 import DataTable from "react-data-table-component";
 import { saveAs } from "file-saver";
 import Input from "postcss/lib/input";
 import { toast } from "react-toastify";
+import FileInput from "./FileInput";
 
-const MappedTimestampInput = ({ handleFileChange, timestampsFile, setTimeStamps, timeStamps, transcription, searches, data, setData, setIsCaputed, isCaputed }) => {
+const MappedTimestampInput = ({ handleFileChange, timestampsFile, setTimeStamps, timeStamps, transcription, searches, data, setData, setIsCaputed, isCaputed, timeStampsType }) => {
 
     useEffect(() => {
         if (timestampsFile && timeStamps.length === 0) {
@@ -51,7 +52,7 @@ const MappedTimestampInput = ({ handleFileChange, timestampsFile, setTimeStamps,
         // "edthem…andtheyflew.APOLLINAIREIt’s a Friday evening in New York in the early spring of 2006. I’m inmy combined60 Minutes and60 Minutes II office at 555 West 57th,across the street from the old renovated milk bar"
 
 
-    }, [timeStamps, timestampsFile, transcription, searches]);
+    }, [timeStamps, timestampsFile, transcription, searches, timeStampsType]);
 
 
     const timeFormator = (time) => {
@@ -97,32 +98,25 @@ const MappedTimestampInput = ({ handleFileChange, timestampsFile, setTimeStamps,
             ),
         };
     });
+    const fileInputRef = useRef(null);
 
     return (
         <div className="w-full mt-12">
-            <div className="flex gap-3 items-end justify-center">
-                <div>
+            <div className="flex gap-3 items-end justify-center max-w-md mx-auto">
 
-                    <label htmlFor="timestamps-file" className="block text-sm font-medium text-gray-700 mb-2">Upload Timestamps File</label>
-                    <input
-                        type="file"
-                        id="timestamps-file"
-                        accept=".xlsx, .xls"
-                        disabled={isCaputed}
-                        // value = {timestampsFile? timestampsFile : ""}
-                        onChange={(e) => { handleFileChange(e) }}
-                        className="p-2 rounded border border-gray-300 disabled:cursor-not-allowed "
+                    <FileInput
+                        label="Upload Timestamps File"
+                        handleFileChange={handleFileChange}
+                        acceptedFileTypes=".xlsx, .xls"
+                        ref={fileInputRef}
                     />
-                    {/* {console.log(timestampsFile)}
-                    {console.log(timestampsFile?.sheet_to_json)} */}
-                </div>
             </div>
             <div className="w-full mt-4">
                 <h2 className="text-xl font-semibold mb-2">Table View</h2>
                 <button
                     type="button"
                     onClick={downloadXLSX}
-                    className="bg-blue-500 text-white py-2 px-4 rounded"
+                    className="button"
                 >
                     Download as XLSX
                 </button>

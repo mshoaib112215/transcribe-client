@@ -166,8 +166,15 @@ const PDFReader = ({ ebookFile, setSearches, transcription, searches, setAllDone
 
     return (
         <>
-            <div className='w-fit flex flex-col justify-center space-y-5'>
-                <button onClick={() => setShow(!show)} className="bg-blue-500 text-white py-2 px-4 rounded w-full max-w-md m-auto">Hide/Show Book Canvas</button>
+            <div className='w-fit mx-auto flex flex-col  justify-center space-y-5'>
+                <button onClick={() => setShow(!show)} className="button flex  items-center gap-1">
+                    {show ? <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 inline-block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg> : <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 inline-block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                    </svg>}
+                    Hide/Show Book Canvas
+                </button>
                 {!allDone && readCompleted !== 0 && (
                     readCompleted <= 99 ? (
                         <div>
@@ -187,6 +194,7 @@ const PDFReader = ({ ebookFile, setSearches, transcription, searches, setAllDone
                 <Document
                     file={ebookFile}
                     onLoadSuccess={onDocumentLoadSuccess}
+                    
                 >
                     {numPages && [...Array(numPages)].map((page, index) => (
                         <React.Fragment key={index}>
@@ -203,7 +211,7 @@ const PDFReader = ({ ebookFile, setSearches, transcription, searches, setAllDone
                                     </p>
                                 </div>
                             </p>
-                            <div className='flex gap-2 items-center justify-center md:flex-row flex-col shadow-[2px_2px_11px_1px_#0000004a]   my-3'>
+                            <div className={`flex gap-2 items-center justify-center md:flex-row  flex-col shadow-[2px_2px_11px_1px_#0000004a] rounded-2xl bg-white my-3`}>
                                 <div className={`${!show ? "" : "hidden"}`}>
 
                                     <Page
@@ -211,7 +219,7 @@ const PDFReader = ({ ebookFile, setSearches, transcription, searches, setAllDone
                                         renderAnnotationLayer={false}
                                         renderTextLayer={false}
                                         onLoadSuccess={(page) => extractText(index + 1, page)}
-                                        className={""}
+                                        
                                     />
                                 </div>
 

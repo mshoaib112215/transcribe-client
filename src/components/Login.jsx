@@ -81,7 +81,7 @@ function Login({ setIsAuth, isAuth, setUser }) {
                     {showPassword ? 'Hide' : 'Show'}
                 </button>
             </div>
-            <button className="bg-blue-500 text-white px-4 py-2 rounded-md mt-4" onClick={handleLogin}>Login</button>
+            <button className="button" onClick={handleLogin}>Login</button>
         </div>
     );
 }

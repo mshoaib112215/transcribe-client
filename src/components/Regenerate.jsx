@@ -8,11 +8,17 @@ import { toast } from 'react-toastify';
 const Regenerate = ({ selectedData }) => {
     // const [selectedData, setselectedData] = useState([]);
     const [timestampsFile, setTimestampsFile] = useState(null);
+    const [timeStampsType, setTimeStampsType] = useState("end");
+
     const [timeStamps, setTimeStamps] = useState([])
     const [transcription, setTranscription] = useState(selectedData.transcription);
     const [searches, setSearches] = useState([]);
     const [isCaputed, setIsCaputed] = useState(false);
     const [data, setData] = useState([]);
+    const audioPlayerRef = useRef(null);
+    const [audioFile, setAudioFile] = useState(null);
+    const [duration, setDuration] = useState(0);
+    const [capturedTimeStamps, setCapturedTimeStamps] = useState([]);
 
     function timestampToSeconds(timestamp) {
         // Check if the timestamp contains a colon (:) to determine if it's in the format "HH:MM:SS"
@@ -22,7 +28,6 @@ const Regenerate = ({ selectedData }) => {
 
             // Determine if the timestamp is negative
             const isNegative = sign === '-';
-
             // If the timestamp is in the format "HH:MM:SS", convert it to seconds
             if (!isNaN(hours) && !isNaN(minutes) && !isNaN(seconds)) {
                 const multiplier = isNegative ? -1 : 1;
@@ -37,29 +42,48 @@ const Regenerate = ({ selectedData }) => {
 
     const getTransSegs = (transcription) => {
         const transcriptions = [];
+        if (duration == 0) {
+
+            toast.info("Audio file isn't selected so cannot find duration accuratly")
+        }
 
         timeStamps.forEach((startingTimestamp) => {
-            const start = isCaputed ? startingTimestamp : timestampToSeconds(startingTimestamp);
-            const duration = 50
-            const end = start + parseFloat(duration);
+            let start;
+            const limit = 50;
+            console.log(isCaputed)
+            console.log(timeStampsType)
+            if (isCaputed == false) {
 
+                if (timeStampsType === "end") {
+                    start = Math.abs(timestampToSeconds(startingTimestamp) - parseFloat(duration))
+                } else {
+                    start = Math.abs(timestampToSeconds(startingTimestamp))
+                }
+
+            }
+            else {
+
+                start = Math.abs(timestampToSeconds(startingTimestamp))
+            }
+            const end = start + parseFloat(limit);
             let startSegment = null;
             const endSegments = [];
 
-            transcription.segments.forEach((seg) => {
+            transcription?.segments?.forEach((seg) => {
                 if (seg.start <= start && start <= seg.end) {
                     startSegment = seg;
                     return
                 }
                 if (start <= seg.start && seg.start <= end && end <= seg.end) {
                     endSegments.push(seg);
+                    return
                 }
 
                 if (start <= seg.start && seg.start <= end) {
                     endSegments.push(seg);
                 }
 
-                if (start + parseFloat(duration) < seg.end) {
+                if (start + parseFloat(limit) < seg.end) {
                     return;
                 }
 
@@ -109,6 +133,7 @@ const Regenerate = ({ selectedData }) => {
         //     return result;
         // });
         const seg = getTransSegs(trans)
+        console.log(seg[0])
         timeStamps.forEach((startingTimestamp, i) => {
             searchPDF(allPageText, seg[i].text)
                 .then(resultText => {
@@ -123,7 +148,7 @@ const Regenerate = ({ selectedData }) => {
         // }
         // }
         // }, [ segmentsText]);
-    }, [transcription, selectedData, timestampsFile, timeStamps]);
+    }, [transcription, selectedData, timestampsFile, timeStamps, timeStampsType, audioFile]);
     // }, []);
 
     const searchPDF = useCallback(async (pdfText, searchTerm) => {
@@ -210,11 +235,18 @@ const Regenerate = ({ selectedData }) => {
     };
     const handleAudioFileChange = (event) => {
         setAudioFile(event.target.files[0]);
+        const audioFile = event.target.files[0];
+
+        const audioElement = document.createElement('audio');
+        audioElement.src = URL.createObjectURL(audioFile);
+
+        audioElement.onloadedmetadata = function () {
+            setDuration(audioElement.duration);
+        };
+        // setDuration(event.target.files[0].duration);
+
     };
-    const audioPlayerRef = useRef(null);
-    const [timeStampsType, setTimeStampsType] = useState("end");
-    const [audioFile, setAudioFile] = useState(null);
-    const [capturedTimeStamps, setCapturedTimeStamps] = useState([]);
+
     const handleRadioChange = (event) => {
         setTimeStampsType(event.target.id);
     };
@@ -223,7 +255,13 @@ const Regenerate = ({ selectedData }) => {
     }, [audioFile]);
     useEffect(() => {
         setTimeStamps((prev) => [...capturedTimeStamps]);
-        setIsCaputed(true);
+        if (capturedTimeStamps.length > 0) {
+            setIsCaputed(true);
+        }
+        else {
+            setIsCaputed(false);
+
+        }
     }, [capturedTimeStamps]);
     const captureTimestamp = useCallback(() => {
         setCapturedTimeStamps((prev) => [...prev, audioPlayerRef?.current.audioEl.current.currentTime]);
@@ -234,34 +272,27 @@ const Regenerate = ({ selectedData }) => {
             <div className='flex flex-col gap-4 max-w-md mx-auto mt-12'>
 
                 <FileInput acceptedFileTypes=".mp3" label="Upload Audio File" handleFileChange={handleAudioFileChange} />
-                <h2 className="text-l font-bold">TimeStamps Type</h2>
+                <h2 className="text-l font-bold mb-1">TimeStamps Type</h2>
 
-                <div>
+                <div className="flex gap-2 items-center ">
+                    <label htmlFor="start" className={`${timeStampsType === 'start' ? 'bg-gray-900 text-white' : 'bg-gray-100'} group flex items-center px-2 py-2 text-base font-medium rounded-md hover:bg-gray-600  hover:text-white text-gray-900 transition border border-black duration-[250ms] ease-in-out mr-2 cursor-pointer ${isCaputed ? 'cursor-not-allowed bg-gray-300 line-through hover:bg-gray-300 hover:text-gray-900' : ''}`}
+                        onClick={() => isCaputed ? setTimeStampsType(null) : setTimeStampsType('start')}
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                        </svg>
+                        <span className="ml-1">Duration from Start</span>
+                    </label>
 
-                    <div className="flex gap-2 items-center">
-                        <input
-                            type="radio"
-                            name="timeStamps_type"
-                            id="end"
-                            disabled={isCaputed}
+                    <label htmlFor="end" className={`${timeStampsType === 'end' ? 'bg-gray-900 text-white' : 'bg-gray-100'} group flex items-center px-2 py-2 text-base font-medium rounded-md border hover:bg-gray-600 hover:text-white text-gray-900 transition  border-black duration-[250ms] ease-in-out cursor-pointer ${isCaputed ? 'cursor-not-allowed bg-gray-300 line-through hover:bg-gray-300 hover:text-gray-900' : ' '}`}
+                        onClick={() => isCaputed ? setTimeStampsType(null) : setTimeStampsType('end')}
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16l-4-4m0 0l4-4m-4 4h18" />
+                        </svg>
 
-                            checked={timeStampsType === 'end'}
-                            onChange={handleRadioChange}
-                        />
-                        <label htmlFor="end" className={isCaputed ? "line-through" : ""}> Duration from the End</label>
-                    </div>
-                    <div className="flex gap-2 items-center">
-                        <input
-                            disabled={isCaputed}
-                            type="radio"
-                            name="timeStamps_type"
-                            id="start"
-
-                            checked={timeStampsType === 'start'}
-                            onChange={handleRadioChange}
-                        />
-                        <label htmlFor="start" className={isCaputed ? "line-through" : ""}> Duration from the Start</label>
-                    </div>
+                        <span className="ml-1">Duration from End</span>
+                    </label>
                 </div>
                 <AudioPlayer
                     ref={audioPlayerRef}
@@ -270,7 +301,7 @@ const Regenerate = ({ selectedData }) => {
                     listenInterval={100}
                     showJumpControls={false}
                     customAdditionalControls={[]}
-                    className="sticky top-14 max-w-md z-50"
+                    className=""
                     style={{ width: '100%' }}
                     customProgressBarSection={[
                         <div>
@@ -284,11 +315,11 @@ const Regenerate = ({ selectedData }) => {
                         </div>,
                     ]}
                 />
-                <button type="button" className="bg-blue-500 disabled:bg-blue-300 disabled:cursor-not-allowed text-white py-2 px-4 rounded" onClick={() => captureTimestamp()}>Capture Timestamp</button>
-                <button type="button" className="bg-blue-500 text-white py-2 px-4 rounded w-full max-w-md" onClick={() => { setTimeStamps([]); setData([]); setTranscription([]); setSearches([]); setTimestampsFile(null); document.getElementById("timestamps-file").value = null; setIsCaputed(false); setCapturedTimeStamps([]) }}>Clear Data Table</button>
+                <button type="button" className="button" onClick={() => captureTimestamp()}>Capture Timestamp</button>
+                <button type="button" className="button" onClick={() => { setTimeStamps([]); setData([]); setTranscription([]); setSearches([]); setTimestampsFile(null); document.getElementById("timestamps-file").value = null; setIsCaputed(false); setCapturedTimeStamps([]) }}>Clear Data Table</button>
 
             </div>
-            <MappedTimestampInput handleFileChange={handleTimestampsFileChange} timestampsFile={timestampsFile} setTimeStamps={setTimeStamps} transcription={data.transcription} searches={searches} setData={setData} data={data} timeStamps={timeStamps} setIsCaputed={setIsCaputed} />
+            <MappedTimestampInput handleFileChange={handleTimestampsFileChange} timestampsFile={timestampsFile} setTimeStamps={setTimeStamps} transcription={data.transcription} searches={searches} setData={setData} data={data} timeStamps={timeStamps} setIsCaputed={setIsCaputed} timeStampsType={timeStampsType} />
         </>
     )
 }

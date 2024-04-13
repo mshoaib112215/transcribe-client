@@ -1,9 +1,10 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { read, utils, write } from "xlsx";
 import DataTable from "react-data-table-component";
 import { saveAs } from "file-saver";
 import Input from "postcss/lib/input";
 import { toast } from "react-toastify";
+import FileInput from "./FileInput";
 
 
 const TimestampsFileInput = ({ handleFileChange, timestampsFile, setTimeStamps, timeStamps, transcription, searches, data, setData, setIsCaputed, isCaputed }) => {
@@ -96,42 +97,28 @@ const TimestampsFileInput = ({ handleFileChange, timestampsFile, setTimeStamps, 
             ),
         };
     });
-
     return (
-        <div className="mx-auto w-fit p-5">
-            <div className="flex gap-3 items-end justify-center">
-                <div>
-
-                    <label htmlFor="timestamps-file" className="block text-sm font-medium text-gray-700 mb-2">Upload Timestamps File</label>
-                    <input
-                        type="file"
-                        id="timestamps-file"
-                        accept=".xlsx, .xls"
-                        disabled={isCaputed}
-                        // value = {timestampsFile? timestampsFile : ""}
-                        onChange={(e) => { handleFileChange(e) }}
-                        className="p-2 rounded border border-gray-300 disabled:cursor-not-allowed "
-                    />
-                    {/* {console.log(timestampsFile)}
-                    {console.log(timestampsFile?.sheet_to_json)} */}
-                </div>
-            </div>
+        <div className="w-fit mx-auto">
+           
             <div className="w-full mt-4">
                 <h2 className="text-xl font-semibold mb-2">Table View</h2>
                 <button
                     type="button"
                     onClick={downloadXLSX}
-                    className="bg-blue-500 text-white py-2 px-4 rounded"
+                    className="button flex items-center gap-1"
                 >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                    </svg>
                     Download as XLSX
                 </button>
-                <div className="w-[90vw] h-[50vh] mt-4">
+                <div className="min-w-[28rem] dataTable  rounded-2xl h-full mt-4">
                     <DataTable
                         columns={columns}
                         data={data}
                         responsive
                         pagination
-                        className="rounded-lg overflow-hidden shadow-md"
+                        className="rounded-lg overflow-hidden bg-transparent custom-shadow"
                     />
                 </div>
             </div>

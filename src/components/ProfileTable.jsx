@@ -17,9 +17,6 @@ const ProfileTable = ({ type, setWholeData, user, wholeData }) => {
 
     useEffect(() => {
         const fetchData = async () => {
-            // const res = await fetch('https://www.noteclimber.com/noteclimberConnection.php/api/get-trans', {
-            //     method: 'GET',
-            // })
             const data = await getTrans(user.id);
             const resData = updateGetTransRes(data)
             console.log(resData)
@@ -82,17 +79,17 @@ const ProfileTable = ({ type, setWholeData, user, wholeData }) => {
 
             <div className="w-full">
 
-                <table className="w-full border border-collapse border-gray-300 transition-all mt-3 h-fit ">
-                    <thead>
-                        <tr className="bg-gray-200">
-                            <th className="p-2 ">Book Name</th>
-                            <th className="p-2 ">Timestamps</th>
-                            <th className="p-2 ">Status</th>
-                            <th className="p-2 ">Action</th>
+                <table className="w-full  border-collapse   text-sm  shadow-lg">
+                    <thead className="bg-gray-300">
+                        <tr className="border-b">
+                            <th className="p-2 rounded-tl-lg border-r font-semibold">Book Name</th>
+                            <th className="p-2 border-r font-semibold">Timestamps</th>
+                            <th className="p-2 border-r font-semibold">Status</th>
+                            <th className="p-2 rounded-tr-lg font-semibold">Action</th>
                         </tr>
                     </thead>
 
-                    <tbody>
+                    <tbody className=' border-b  bg-white text-sm leading-relaxed  divide-y divide-gray-200 dark:divide-gray-700 '>
                         {!loading ?
                             data?.length > 0 ?
                                 data.map((feed, i) => (
@@ -129,13 +126,18 @@ const ProfileTable = ({ type, setWholeData, user, wholeData }) => {
                                         </td>
 
                                         <td className={`p-2 text-sm  flex justify-center ${i == 0 ? '' : 'border-t'}`} >
-                                            <button className='bg-blue-500 hover:bg-blue-700 text-white mx-auto  font-bold py-2 px-4 rounded' onClick={() => regenerateNote(feed)}>Generate Notes</button>
+                                            <button className='button' onClick={() => regenerateNote(feed)}><span className="flex items-center">
+                                                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                                </svg>
+                                                <span className="ml-2">Regenerate Notes</span>
+                                            </span></button>
                                         </td>
                                     </tr>
                                 ))
                                 :
                                 <tr>
-                                    <td className="p-2 text-sm  capitalize">No data found</td>
+                                    <td className="p-2 text-sm  capitalize" colSpan="4">No data found</td>
                                 </tr>
                             :
                             <>

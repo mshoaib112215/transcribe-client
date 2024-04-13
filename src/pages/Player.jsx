@@ -22,7 +22,7 @@ function Player({ user }) {
     const [timeStamps, setTimeStamps] = useState([])
     const [offset, setOffset] = useState(0)
     const [duration, setDuration] = useState(50)
-    const [timeStampsType, setTimeStampsType] = useState("end");
+    const [timeStampsType, setTimeStampsType] = useState(null);
     const [searches, setSearches] = useState([]);
     const [allDone, setAllDone] = useState(false)
     const [audioDuration, setAudioDuration] = useState(null);
@@ -62,7 +62,7 @@ function Player({ user }) {
             const relevantSegment = obj?.result?.segments.find(({ start, end }) =>
                 currentTime >= (start + current_time) && currentTime <= (end + current_time)
             );
-            
+
 
             if (relevantSegment) {
                 if (processedSeg.some(seg => seg.time.start === relevantSegment.start + current_time && seg.highlighted)) {
@@ -363,7 +363,7 @@ function Player({ user }) {
                 });
 
                 Promise.all(searchPromises)
-                .then(results => {
+                    .then(results => {
                         console.log(results)
                         setSearches(results);
                     })
@@ -372,9 +372,9 @@ function Player({ user }) {
                     });
             }
         }
-    // }, [ segmentsText]);
+        // }, [ segmentsText]);
     }, [transcription, allDone, pdfText]);
-   
+
     const searchPDF = useCallback(async (pdfText, searchTerm) => {
         const searchResults = [];
         let starter = 0;
@@ -462,7 +462,7 @@ function Player({ user }) {
 
     };
 
-    useEffect(()=>{
+    useEffect(() => {
         console.log(bookName)
     }, [bookName])
     const handleTimestampsFileChange = (event) => {
@@ -484,7 +484,7 @@ function Player({ user }) {
     const transcribe = useCallback(async () => {
 
         if (audioFile) {
-            
+
             if (bookName == null) {
                 console.log(bookName)
                 toast.error("Cannot get Book name")
@@ -492,10 +492,14 @@ function Player({ user }) {
             }
             if (timeStamps.length === 0) {
                 toast.success("Your Files sending for Entire Mapping Process!")
-                
+
+            }
+            if(!isCaputed && timeStampsType == null){
+                toast.error("Please select timestamps type")
+                return
             }
             const formData = new FormData();
-            
+
             formData.append('fileName', audioFile.name);
             formData.append('timeStamps', timeStamps);
             formData.append('audioDuration', audioDuration);
@@ -586,68 +590,74 @@ function Player({ user }) {
             </div>
         );
     };
+    const fileInputRef = useRef(null);
+
     return (
         <>
 
-            <div className="flex justify-start">
+            <div className="flex flex-col items-start justify-center gap-6 w-full mx-auto mt-10">
 
-                {/* <Link to="/" className="text-white   bg-blue-500 px-4 py-2  rounded-md ">Go to Home</Link> */}
-                <Link to="/" className="text-white   bg-blue-500 px-4 py-2 rounded-md ">Go to Home</Link>
-            </div>
 
-            <div className="flex flex-col items-center justify-center gap-6 w-full mx-auto mt-10">
-                <h1 className="text-3xl font-bold">Audio to Text</h1>
-
-                <form className="flex flex-col gap-6 w-full max-w-md h-fit" style={{ position: 'relative' }}>
+                <h1 className="text-3xl font-bold">Player</h1>
+                <div className="flex gap-3 w-full flex-wrap">
 
                     <FileInput acceptedFileTypes=".mp3" label="Upload Audio File" handleFileChange={handleAudioFileChange} />
-                    <h2 className="text-l font-bold">TimeStamps Type</h2>
-
-                    <div>
-                        <div className="flex gap-2 items-center">
-                            <input
-                                type="radio"
-                                name="timeStamps_type"
-                                id="end"
-                                disabled={isCaputed}
-
-                                checked={timeStampsType === 'end'}
-                                onChange={handleRadioChange}
-                            />
-                            <label htmlFor="end" className={isCaputed ? "line-through" : ""}> Duration from the End</label>
-                        </div>
-                        <div className="flex gap-2 items-center">
-                            <input
-                                disabled={isCaputed}
-                                type="radio"
-                                name="timeStamps_type"
-                                id="start"
-
-                                checked={timeStampsType === 'start'}
-                                onChange={handleRadioChange}
-                            />
-                            <label htmlFor="start" className={isCaputed ? "line-through" : ""}> Duration from the Start</label>
-                        </div>
-
-                    </div>
-
-                    <div className="flex flex-col gap-6 w-full">
-                        <div className="flex w-full justify-between items-center">
-                            <label className="text-sm">Offset from timestamps (sec)</label>
-                            <input type="number" value={offset} onChange={(e) => setOffset(e.target.value)} className="p-2 rounded border border-gray-300 outline-none appearance-none" placeholder="Offset from timestamps" />
-                        </div>
-
-                        <div className="flex w-full justify-between items-center">
-                            <label className="text-sm">Duration of each TimeStamps (sec)</label>
-                            <input type="number" value={duration} onChange={(e) => setDuration(e.target.value)} className="p-2 rounded border border-gray-300 outline-none appearance-none" placeholder="Duration" />
-                        </div>
-                    </div>
-
                     <FileInput acceptedFileTypes=".pdf" label="Upload ebook File" handleFileChange={handleEbookFileChange} />
+                    <FileInput
+                        label="Upload Timestamps File"
+                        handleFileChange={handleTimestampsFileChange}
+                        acceptedFileTypes=".xlsx, .xls"
+                        ref={fileInputRef}
+                    />
+                </div>
+
+                <form className="flex flex-col gap-6 w-full max-w-md h-fit mx-auto" style={{ position: 'relative' }}>
+
+                    <h2 className="text-l font-bold mb-1">TimeStamps Type</h2>
+
+                    <div className="flex gap-2 items-center ">
+                        <label htmlFor="start" className={`${timeStampsType === 'start' ? 'bg-gray-900 text-white' : 'bg-gray-100'} group flex items-center px-2 py-2 text-base font-medium rounded-md hover:bg-gray-600  hover:text-white text-gray-900 transition border border-black duration-[250ms] ease-in-out mr-2 cursor-pointer ${isCaputed ? 'cursor-not-allowed bg-gray-300 line-through hover:bg-gray-300 hover:text-gray-900' : ''}`}
+                            onClick={() => isCaputed ? setTimeStampsType(null) : setTimeStampsType('start')}
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                            </svg>
+                            <span className="ml-1">Duration from Start</span>
+                        </label>
+
+                        <label htmlFor="end" className={`${timeStampsType === 'end' ? 'bg-gray-900 text-white' : 'bg-gray-100'} group flex items-center px-2 py-2 text-base font-medium rounded-md border hover:bg-gray-600 hover:text-white text-gray-900 transition  border-black duration-[250ms] ease-in-out cursor-pointer ${isCaputed ? 'cursor-not-allowed bg-gray-300 line-through hover:bg-gray-300 hover:text-gray-900' : ' '}`}
+                            onClick={() => isCaputed ? setTimeStampsType(null) : setTimeStampsType('end')}
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16l-4-4m0 0l4-4m-4 4h18" />
+                            </svg>
+
+                            <span className="ml-1">Duration from End</span>
+                        </label>
+                    </div>
+                    <div className="flex flex-col gap-6 w-full mt-6 border-t border-gray-300">
+                        <div className="flex items-center justify-between p-4 border-b border-gray-300">
+                            <label className="text-sm font-medium text-gray-800">Offset from timestamps (sec)</label>
+                            <input type="number" value={offset} onChange={(e) => setOffset(e.target.value)} className="w-24 px-4 py-2 rounded-md border border-gray-300 shadow-sm focus:ring-1 focus:ring-blue-600 focus:border-blue-600" />
+                        </div>
+
+                        <div className="flex items-center justify-between p-4 border-b border-gray-300">
+                            <label className="text-sm font-medium text-gray-800">Duration of each TimeStamps (sec)</label>
+                            <input type="number" value={duration} onChange={(e) => setDuration(e.target.value)} className="w-24 px-4 py-2 rounded-md border border-gray-300 shadow-sm focus:ring-1 focus:ring-blue-600 focus:border-blue-600" />
+                        </div>
+                    </div>
+
 
 
                 </form>
-                <button type="button" onClick={() => scrollToHighlight()} className="bg-blue-500 text-white py-2 px-4 rounded sticky top-3 max-w-md w-full z-50">Scroll to highlight</button>
+
+
+
+                <TimestampsFileInput handleFileChange={handleTimestampsFileChange} timestampsFile={timestampsFile} setTimeStamps={setTimeStamps} transcription={transcription} searches={searches} setData={setData} data={data} timeStamps={timeStamps} setIsCaputed={setIsCaputed} />
+                <PDFReader ebookFile={ebookFile} setSearches={setSearches} searches={searches} transcription={transcription} allDone={allDone} setAllDone={setAllDone} pdfText={pdfText} setPdfText={setPdfText} segmentsText={segmentsText} setNumPages={setNumPages} numPages={numPages} />
+
+            </div>
+            <div className=" flex flex-col   whitespace-nowrap sticky bottom-0 rounded-2xl bg-white h-fit   p-3 right-0 gap-3 w-full overflow-auto custom-shadow hidden-scroll">
 
                 <AudioPlayer
                     ref={audioPlayerRef}
@@ -660,8 +670,8 @@ function Player({ user }) {
                     onSeeked={handleSeeked}
                     onPlay={handlePlaying}
                     onPause={handlePause}
-                    className="sticky top-14 max-w-md z-50"
-                    style={{ width: '100%' }}
+                    className=" max-w-md z-50 sticky left-1/2 transform -translate-x-1/2"
+                    style={{ width: '100%', background: "white" }}
                     customProgressBarSection={[
                         <div>
                             <span className="custom-time">0:00</span>
@@ -674,17 +684,59 @@ function Player({ user }) {
                         </div>,
                     ]}
                 />
-                <div className="max-w-md flex flex-col  gap-3 w-full">
+                <div className="flex flex-row gap-3 w-fit">
 
-                    <button type="button" className="bg-blue-500 disabled:bg-blue-300 disabled:cursor-not-allowed text-white py-2 px-4 rounded" onClick={() => captureTimestamp()}>Capture Timestamp</button>
-                    <button type="button" onClick={() => scrollToText()} className="bg-blue-500 text-white py-2 px-4 rounded w-full disabled:bg-blue-300 disabled:cursor-not-allowed">Start scrolling process</button>
-                    <button type="button" onClick={() => stopScrolling()} className="bg-blue-500 text-white py-2 px-4 rounded w-full disabled:bg-blue-300 disabled:cursor-not-allowed">Stop server for scrolling process</button>
-                    <button type="button" disabled={!allDone} className="bg-blue-500 text-white py-2 px-4 rounded w-full disabled:bg-blue-400 disabled:cursor-not-allowed" onClick={() => { transcribe() }}>Transcribe</button>
+                    <button type="button" className="button" onClick={() => captureTimestamp()}>
+                        <span className="flex items-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <span className="ml-2">Capture Timestamp</span>
+                        </span>
+                    </button>
+                    <button type="button" disabled={!allDone} className="button" onClick={() => { transcribe() }}>
+                        <span className="flex items-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                            </svg>
+                            <span className="ml-2">Start Transcription</span>
+                        </span>
+                    </button>
+                    <button type="button" onClick={() => scrollToText()} className="button">
+                        <span className="flex items-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                            </svg>
+                            <span className="ml-2">Start scrolling process</span>
+                        </span>
+                    </button>
+                    <button type="button" onClick={() => scrollToHighlight()} className="button">
+                        <span className="flex items-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                            </svg>
+                            <span className="ml-2">Scroll to highlighted Text</span>
+                        </span>
+                    </button>
+                    <button type="button" onClick={() => stopScrolling()} className="button">
+                        <span className="flex items-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <span className="ml-2">Stop server for scrolling process</span>
+                        </span>
+                    </button>
+                    <button type="button" className="button" onClick={() => { setTimeStamps([]); setData([]); setTranscription([]); setSearches([]); setTimestampsFile(null); document.getElementById("timestamps-file").value = null; setIsCaputed(false); setCapturedTimeStamps([]); }}>
+                        <span className="flex items-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                            <span className="ml-2">Clear Data Table</span>
+                        </span>
+                    </button>
                 </div>
-                <PDFReader ebookFile={ebookFile} setSearches={setSearches} searches={searches} transcription={transcription} allDone={allDone} setAllDone={setAllDone} pdfText={pdfText} setPdfText={setPdfText} segmentsText={segmentsText} setNumPages={setNumPages} numPages={numPages} />
-                <button type="button" className="bg-blue-500 text-white py-2 px-4 rounded w-full max-w-md" onClick={() => { setTimeStamps([]); setData([]); setTranscription([]); setSearches([]); setTimestampsFile(null); document.getElementById("timestamps-file").value = null; setIsCaputed(false); setCapturedTimeStamps([]); }}>Clear Data Table</button>
 
-                <TimestampsFileInput handleFileChange={handleTimestampsFileChange} timestampsFile={timestampsFile} setTimeStamps={setTimeStamps} transcription={transcription} searches={searches} setData={setData} data={data} timeStamps={timeStamps} setIsCaputed={setIsCaputed} />
             </div>
         </>
     );
