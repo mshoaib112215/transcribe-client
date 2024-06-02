@@ -1,13 +1,21 @@
 import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import ProfileTable from '../components/ProfileTable'
+import { fetchBooks } from '../../internal'
 
-const Profile = ({ user, setWholeData, wholeData}) => {
-    console.log(wholeData)
+const ProfileLayout = ({ children, user }) => {
+    const [wholeData, setWholeData] = useState([])
+    const [books, setBooks] = useState([])
+    useEffect(() => {
+        const fetch = async () => {
+            const res = await fetchBooks(user.id);
+            const data = await res.json() 
+            console.log(data)
+            setBooks(data)
+        }
+        fetch()
+    }, [])
     return (
-
         <>
-          
             <div className="container m-auto p-3">
 
                 <h1 className="text-2xl font-bold mb-4">Profile</h1>
@@ -24,20 +32,24 @@ const Profile = ({ user, setWholeData, wholeData}) => {
                             Your Pending Books: <span className='text-xl'>{wholeData.filter(d => !d.status.includes('100')).length.toString()}</span>
                         </div>
                     </Link>
-                    
+                    <Link to='/profile/my-books' className='border bg-white  shadow-md flex-1 flex justify-center p-12 rounded-lg cursor-pointer'>
+                        <div className='flex items-center gap-2'>
+                            Your Books: <span className='text-xl'>{books.length.toString()}</span>
+                        </div>
+                    </Link>
+
                 </div>
                 <div className='mt-4'>
 
-                    <ProfileTable type="1" setWholeData={setWholeData} user={user} wholeData = {wholeData}/>
+                    {React.Children.map(children, (child) => {
+                        return React.cloneElement(child, { user, setWholeData, wholeData, books })
+                    })}
+
                 </div>
-
             </div>
-
-            {/* List of his processed books */}
-
 
         </>
     )
 }
 
-export default Profile
+export default ProfileLayout

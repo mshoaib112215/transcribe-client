@@ -16,6 +16,7 @@
     "axios": "^1.6.7",
     "file-saver": "^2.0.5",
     "kmp-matcher": "^0.1.2",
+    "lodash": "^4.17.21",
     "mp3-slice": "^1.1.2",
     "pdf-parse": "^1.1.1",
     "pdf-viewer": "^0.8.1",

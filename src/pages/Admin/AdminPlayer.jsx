@@ -1,7 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import AudioPlayer from "react-audio-player";
-import FileInput from "../components/FileInput";
-import TimestampsFileInput from "../components/TimestampsFileInput";
 import mp3Slice from "mp3-slice";
 import audioBufferSlice from 'audiobuffer-slice';
 import io from 'socket.io-client';
@@ -9,11 +7,12 @@ import kmp_matcher from 'kmp-matcher';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { Link } from "react-router-dom"
-import PDFReader from "../components/PDFReader";
-import MemorizedAudioPlayer from "../components/MemorizedAudioPlayer";
+import FileInput from "../../components/FileInput";
+import TimestampsFileInput from "../../components/TimestampsFileInput";
+import PDFReader from "../../components/PDFReader";
 
-function Player({ user }) {
-
+function AdminPlayer({ user }) {
+    
     const [audioFile, setAudioFile] = useState(null);
     const [timestampsFile, setTimestampsFile] = useState(null);
     const [ebookFile, setEbookFile] = useState(null);
@@ -269,6 +268,8 @@ function Player({ user }) {
 
     useEffect(() => {
         setNewSocket(io(socketURL));
+
+
     }, [])
     useEffect(() => {
         if (newSocket) {
@@ -492,7 +493,7 @@ function Player({ user }) {
                 toast.success("Your Files sending for Entire Mapping Process!")
 
             }
-            if(!isCaputed && timeStampsType == null){
+            if (!isCaputed && timeStampsType == null) {
                 toast.error("Please select timestamps type")
                 return
             }
@@ -508,8 +509,6 @@ function Player({ user }) {
             formData.append('userId', user.id);
             formData.append('pdfText', JSON.stringify(pdfText || []));
             formData.append('bookName', bookName);
-            formData.append('ebookFile', ebookFile);
-            
             if (JSON.stringify(pdfText || []) == []) {
                 toast.error("Please upload a pdf file")
                 return
@@ -618,7 +617,7 @@ function Player({ user }) {
             <div className="flex flex-col items-start justify-center gap-6 w-full mx-auto mt-10">
 
 
-                <h1 className="text-3xl font-bold">Player</h1>
+                <h1 className="text-3xl font-bold">Admin Player</h1>
                 <div className="flex gap-3 w-full flex-wrap">
 
                     <FileInput acceptedFileTypes=".mp3" label="Upload Audio File" handleFileChange={handleAudioFileChange} />
@@ -634,7 +633,7 @@ function Player({ user }) {
                 <form className="flex flex-col gap-6 w-full max-w-md h-fit mx-auto" style={{ position: 'relative' }}>
 
                     <h2 className="text-l font-bold mb-1">TimeStamps Type</h2>
-
+        
                     <div className="flex gap-2 items-center ">
                         <label htmlFor="start" className={`${timeStampsType === 'start' ? 'bg-gray-900 text-white' : 'bg-gray-100'} group flex items-center px-2 py-2 text-base font-medium rounded-md hover:bg-gray-600  hover:text-white text-gray-900 transition border border-black duration-[250ms] ease-in-out mr-2 cursor-pointer ${isCaputed ? 'cursor-not-allowed bg-gray-300 line-through hover:bg-gray-300 hover:text-gray-900' : ''}`}
                             onClick={() => isCaputed ? setTimeStampsType(null) : setTimeStampsType('start')}
@@ -766,4 +765,4 @@ function Player({ user }) {
     );
 }
 
-export default Player;
+export default AdminPlayer;

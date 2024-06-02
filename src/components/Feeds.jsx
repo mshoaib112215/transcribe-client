@@ -2,16 +2,91 @@ import React, { useEffect, useState } from 'react'
 import DataTableDisplay from './DataTableDisplay'
 import { toast } from 'react-toastify'
 import { Link } from 'react-router-dom'
-import { getTrans } from '../internal'
+import { getBookInfo, getTrans, getTransText } from '../internal'
 import { updateGetTransRes } from '../utils'
+import { isEqual } from 'lodash'
+import DataTable from 'react-data-table-component';
 
 const Feeds = ({ user, feeds, setFeeds }) => {
 
     const [showDataTable, setShowDataTable] = useState(false)
     const [selectedFeed, setSelectedFeed] = useState({})
     const [loading, setLoading] = useState(false)
-    const [showMore, setShowMore] = useState(false)
+    const [showMore, setShowMore] = useState([])
+    const [instantGenerate, setInstantGenerate] = useState(null)
 
+    const columns = [
+        {
+            name: 'Book Name',
+            selector: row => row.book_name,
+            sortable: true,
+        },
+        {
+            name: 'Timestamps',
+            cell: row => (
+                <>
+                    {
+                        row.timestamps.split(',').length > 5 ?
+                            <div className="flex flex-wrap">
+                                {row.timestamps.split(',').slice(0, 5).map((time, index) => (
+                                    <span key={index} className="inline-block m-1 px-2 py-1 rounded-full bg-violet-500 text-white shadow-sm">
+                                        <span className="font-light">{time.includes(':') ? time : timeFormator(time)}</span>
+                                    </span>
+                                ))}
+                                {showMore[row.id] && row.timestamps.split(',').slice(5).map((time, index) => (
+                                    <span key={index + 5} className="inline-block m-1 px-2 py-1 rounded-full bg-violet-500 text-white shadow-sm">
+                                        <span className="font-light">{time.includes(':') ? time : timeFormator(time)}</span>
+                                    </span>
+                                ))}
+                                <button className="text-blue-600 transition duration-150 ease-in-out focus:outline-none focus:shadow-outline m-1 py-1 px-2 rounded-lg "
+                                    onClick={() => setShowMore(prev => {
+                                        const newShowMore = { ...prev }
+                                        newShowMore[row.id] = !newShowMore[row.id]
+                                        return newShowMore
+                                    })}>
+                                    {showMore[row.id] ? 'Show Less' : `+${row.timestamps.split(',').length - 5} more`}
+                                </button>
+
+                            </div>
+                            :
+                            row.timestamps.split(',').map((time, index) => (
+                                <span key={index} className="inline-block m-1 px-2 py-1 rounded-full bg-violet-500 text-white shadow-sm">
+                                    <span className="font-light">{time.includes(':') ? time : timeFormator(time)}</span>
+                                </span>
+                            ))
+                    }
+                </>
+            ),
+            sortable: false,
+        },
+        {
+            name: 'Book info Status',
+            cell: row => (
+                <>
+                    {instantGenerate == row.id ? "Please wait..." : row.book_text ? 'completed' : 'gathering'}
+                </>
+            ),
+            sortable: false,
+        },
+        {
+            name: 'Action',
+            cell: row => (
+                <button className='button' onClick={() => regenerateNote(row)}>
+                    <span className="flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        </svg>
+                        <span className="ml-2">Regenerate Notes</span>
+                    </span>
+                </button>
+            ),
+            sortable: false,
+        },
+    ];
+
+    useEffect(() => {
+        console.log(DataTableDisplay)
+    }, [DataTableDisplay])
     useEffect(() => {
         const fetchFeeds = async () => {
             // const res = await fetch('https://www.noteclimber.com/noteclimberConnection.php/api/get-trans', {
@@ -19,14 +94,46 @@ const Feeds = ({ user, feeds, setFeeds }) => {
             // })
 
             const data = await getTrans();
-            const newData = updateGetTransRes(data)
-            // console.log(data)
-            setFeeds(newData.filter(d => d.status.includes('100')))
+            // Check if the previous data is equal to the new data
+            const doneDataLength = data.filter(d => d.status.includes('100')).length;
+            const isDataChanged = feeds.length != doneDataLength;
+
+            // Only update the state if the new data is different from the previous data
+            if (isDataChanged) {
+                setFeeds(prevFeeds => {
+                    const filteredData = data.filter(d => {
+                        const prevFeed = prevFeeds.find(pd => pd.id === d.id);
+                        return !prevFeed || (!prevFeed.status.includes('100') && !(prevFeed.transcriptions && prevFeed.book_row_id))
+                    });
+                    return [...prevFeeds, ...filteredData];
+                });
+            }
+
+
             setLoading(false)
+
+            for (const feed of data) {
+                if (!feeds.find(f => f.id === feed.id)?.transcriptions) {
+                    const trans = await getTransText(feed.id)
+                    setFeeds(prevFeeds => {
+                        return prevFeeds.map(f => f.id === feed.id ? { ...f, transcriptions: trans } : f)
+                    });
+                }
+                if (!feeds.find(f => f.id === feed.id)?.book_row_id) {
+                    const bookInfo = await getBookInfo(feed.book_id)
+                    setFeeds(prevFeeds => {
+                        return prevFeeds.map(f => f.id === feed.id ? { ...f, ...bookInfo } : f)
+                    });
+                }
+            }
+
+
         }
         if (feeds?.length <= 0 || feeds == undefined) {
             if (!loading) {
                 setLoading(true); // Set loading state to true to indicate fetching is in progress
+                setSelectedFeed({});
+
                 fetchFeeds();
             } else {
                 console.log('Fetch is already in progress.');
@@ -42,13 +149,12 @@ const Feeds = ({ user, feeds, setFeeds }) => {
 
         }
         setShowDataTable(false);
-        setSelectedFeed({});
         const timer = setInterval(() => {
             if (!(feeds?.length <= 0 || feeds == undefined)) {
                 fetchFeeds();
             }
             // setSelectedFeed({});
-        }, 30000); // 3000 milliseconds = 3 seconds
+        }, 3000); // 3000 milliseconds = 3 seconds
 
         return () => clearInterval(timer);
     }, [])
@@ -64,8 +170,30 @@ const Feeds = ({ user, feeds, setFeeds }) => {
         }
     }
     const regenerateNote = (feed) => {
-        setShowDataTable(true);
-        setSelectedFeed(feed)
+        if (!feed.book_text) {
+            setInstantGenerate(feed.id)
+            getBookInfo(feed.book_id).then(res1 => {
+                getTransText(feed.id).then(res2 => {
+
+                    console.log(res1)
+                    console.log(res2)
+                    setFeeds(prevFeeds => {
+                        const prevData = prevFeeds;
+                        const newData = [...prevData.filter(f => f.id !== feed.id), { ...feed, ...res1, transcriptions: res2 }]
+                        return newData;
+                    })
+                    setSelectedFeed({ ...feed, ...res1, transcriptions: res2 })
+                    setShowDataTable(true)
+                    setInstantGenerate(null)
+                })
+
+            })
+        }
+        else {
+
+            setShowDataTable(true);
+            setSelectedFeed(feed)
+        }
 
 
     }
@@ -75,120 +203,20 @@ const Feeds = ({ user, feeds, setFeeds }) => {
             <div className=" p-4 ">
 
                 <h1 className="text-2xl font-bold mb-4">Feeds</h1>
-                <table className="w-full  border-collapse  rounded-lg text-sm  shadow-lg">
-                    <thead className="bg-gray-300">
-                        <tr className="border-b">
-                            <th className="p-2 rounded-tl-lg border-r font-semibold">Book Name</th>
-                            <th className="p-2 border-r font-semibold">Timestamps</th>
-                            <th className="p-2 rounded-tr-lg font-semibold">Action</th>
-                        </tr>
-                    </thead>
+                <div className="rounded-lg">
 
-                    <tbody className=' border-b  bg-white text-sm leading-relaxed  divide-y divide-gray-200 dark:divide-gray-700 '>
-                        {!loading ?
-                            feeds?.length > 0 ?
-                                feeds.map((feed, i) => (
-                                    <tr key={feed.id} className="hover:bg-gray-100 dark:hover:bg-gray-700">
-                                        <td className="p-2 border-r text-gray-900 capitalize">
-                                            {feed.book_name}
-                                        </td>
-                                        <td className="p-2 border-r text-gray-600">
-                                            {
-                                                feed.timestamps.split(',').length > 5 ?
-                                                    <>
-                                                        {feed.timestamps.split(',').slice(0, 5).map((time, index) => (
-                                                            <span key={index} className="inline-block m-1 px-2 py-1 rounded-full bg-violet-500 text-white shadow-sm">
-                                                                <span className="font-light">{time.includes(':') ? time : timeFormator(time)}</span>
-                                                            </span>
-                                                        ))}
-                                                        {showMore[i] && feed.timestamps.split(',').slice(5).map((time, index) => (
-                                                            <span key={index + 5} className="inline-block m-1 px-2 py-1 rounded-full bg-violet-500 text-white shadow-sm">
-                                                                <span className="font-light">{time.includes(':') ? time : timeFormator(time)}</span>
-                                                            </span>
-                                                        ))}
-                                                        <button className="text-blue-600 transition duration-150 ease-in-out focus:outline-none focus:shadow-outline m-1 py-1 px-2 rounded-lg"
-                                                            onClick={() => setShowMore(prev => {
-                                                                const newShowMore = { ...prev }
-                                                                newShowMore[i] = !newShowMore[i]
-                                                                return newShowMore
-                                                            })}>
-                                                            {showMore[i] ? 'Show Less' : `+${feed.timestamps.split(',').length - 5} more`}
-                                                        </button>
+                    <DataTable
+                        columns={columns}
+                        data={feeds}
+                        highlightOnHover
+                        striped
+                        centered
+                        pagination
+                        responsive
+                    />
+                </div>
 
-                                                    </>
-                                                    :
-                                                    feed.timestamps.split(',').map((time, index) => (
-                                                        <span key={index} className="inline-block m-1 px-2 py-1 rounded-full bg-violet-500 text-white shadow-sm">
-                                                            <span className="font-light">{time.includes(':') ? time : timeFormator(time)}</span>
-                                                        </span>
-                                                    ))
-                                            }
-                                        </td>
-
-
-
-                                        <td className={`p-2 text-right  ${i == 0 ? '' : 'border-t'}`} >
-                                            <button className='button' onClick={() => regenerateNote(feed)}>
-                                                <span className="flex items-center">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                                                    </svg>
-                                                    <span className="ml-2">Regenerate Notes</span>
-                                                </span>
-                                            </button>
-                                        </td>
-                                    </tr>
-                                ))
-                                :
-                                <tr>
-                                    <td className="p-2 text-gray-900 text-center" colSpan="3">No feeds found</td>
-                                </tr>
-                            :
-                            <>
-                                <tr>
-                                    <td class="p-2">
-                                        <div class="h-8 bg-gray-200 rounded-full overflow-hidden relative">
-                                            <div class="h-full absolute inset-0 bg-gradient-to-r from-gray-200 via-white to-gray-200 animate-glass"></div>
-                                        </div>
-                                    </td>
-                                    <td class="p-2">
-                                        <div class="h-8 bg-gray-200 rounded-full overflow-hidden relative">
-                                            <div class="h-full absolute inset-0 bg-gradient-to-r from-gray-200 via-white to-gray-200 animate-glass"></div>
-                                        </div>
-                                    </td>
-                                    <td class="p-2">
-                                        <div class="h-8 bg-gray-200 rounded-full overflow-hidden relative">
-                                            <div class="h-full absolute inset-0 bg-gradient-to-r from-gray-200 via-white to-gray-200 animate-glass"></div>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td class="p-2">
-                                        <div class="h-8 bg-gray-200 rounded-full overflow-hidden relative">
-                                            <div class="h-full absolute inset-0 bg-gradient-to-r from-gray-200 via-white to-gray-200 animate-glass"></div>
-                                        </div>
-                                    </td>
-                                    <td class="p-2">
-                                        <div class="h-8 bg-gray-200 rounded-full overflow-hidden relative">
-                                            <div class="h-full absolute inset-0 bg-gradient-to-r from-gray-200 via-white to-gray-200 animate-glass"></div>
-                                        </div>
-                                    </td>
-                                    <td class="p-2">
-                                        <div class="h-8 bg-gray-200 rounded-full overflow-hidden relative">
-                                            <div class="h-full absolute inset-0 bg-gradient-to-r from-gray-200 via-white to-gray-200 animate-glass"></div>
-                                        </div>
-                                    </td>
-                                </tr>
-
-                            </>
-
-
-
-
-                        }
-                    </tbody>
-                </table>
-                {showDataTable && <DataTableDisplay data={[selectedFeed]} />}
+                {showDataTable && (selectedFeed.book_text ? <DataTableDisplay data={[selectedFeed]} /> : <div className="text-center text-2xl">Getting Book Information...</div>)}
             </div >
         </>
 

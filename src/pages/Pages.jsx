@@ -5,14 +5,22 @@ import Home from './Home'
 import Player from './Player'
 import Feeds from '../components/Feeds'
 import { ToastContainer } from 'react-toastify'
-import QueueBooks from './QueueBooks'
-import Profile from './Profile'
+import QueueBooks from './Profile/QueueBooks'
+import Profile from './Profile/Profile'
 import MappedBooks from '../components/MappedBooks'
 import QueueMappedBooks from '../components/QueueMappedBooks'
-import { HomeIcon, UserIcon, MenuIcon, BadgeCheckIcon, PlayIcon } from '@heroicons/react/outline'
+import { HomeIcon, UserIcon, MenuIcon, BadgeCheckIcon, PlayIcon, ShieldCheckIcon } from '@heroicons/react/outline'
+import Admin from './Admin/Admin'
+import AdminMappedBook from './Admin/AdminMappedBook'
+import AdminUsers from './Admin/AdminUsers'
+import AdminMappedBooksQueue from './Admin/AdminMappedBooksQueue'
+import AdminLayout from './Admin/AdminLayout'
+import AdminPlayer from './Admin/AdminPlayer'
+import ProfileLayout from './Profile/ProfileLayout'
+import MyBooks from './Profile/MyBooks'
+
 
 const Pages = ({ user }) => {
-    const [wholeData, setWholeData] = useState([])
     const [wholeDataMap, setWholeDataMap] = useState([])
     const [isOpen, setIsOpen] = useState(false)
     const [data, setData] = useState([])
@@ -23,21 +31,22 @@ const Pages = ({ user }) => {
     const activeClasses = "bg-gray-900 hover:!bg-gray-900 !text-white";
     const activeIconClasses = "text-white";
 
+
     return (
         <>
-            <ToastContainer />
+            {/* <ToastContainer /> */}
             <div className={`flex h-screen bg-gray-100`}>
 
-                <div className={`md:hidden absolute z-10`}
+                <div className={`md:hidden absolute z-10 `}
                     onClick={handleMenuClick}>
-                    <button className="block  flex-shrink-0 p-4 bg-white rounded-ee-2xl   text-gray-400 hover:text-gray-500 focus:outline-none focus:text-gray-700 ">
+                    <button className="block  flex-shrink-0 p-4 bg-white rounded-ee-2xl   text-gray-400 hover:text-gray-500 focus:outline-none focus:text-gray-700 shadow-lg">
                         <svg className="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             {isOpen ? <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /> : <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />}
                         </svg>
                     </button>
                 </div>
 
-                <div className={`${isOpen ? 'block absolute' : 'md:!flex !hidden '} sm:flex sm:flex-shrink-0 md:static  top-12 z-10`}>
+                <div className={`${isOpen ? 'block absolute' : 'md:!flex !hidden '} sm:flex sm:flex-shrink-0 md:static  top-12 md:z-0 z-10 shadow-lg`}>
                     <div className="flex flex-col w-64">
                         {/* Sidebar component, swap this with your sidebar component */}
                         <div className="flex flex-col flex-1 h-0 bg-white">
@@ -58,7 +67,7 @@ const Pages = ({ user }) => {
                                         onClick={() => setIsOpen(false)}
                                         aria-current="page"
                                     >
-                                        {({isActive}) => (
+                                        {({ isActive }) => (
                                             <>
                                                 <div className={`mr-4 h-6 w-6 text-gray-700 group-hover:!text-white transition-all duration-[250ms] ${isActive ? 'text-white' : 'text-gray-400'}`}>
                                                     <HomeIcon aria-hidden="true" />
@@ -76,7 +85,7 @@ const Pages = ({ user }) => {
                                         onClick={() => setIsOpen(false)}
                                         aria-current="page"
                                     >
-                                        {({isActive}) => (
+                                        {({ isActive }) => (
                                             <>
                                                 <div className={`mr-4 h-6 w-6 text-gray-700 group-hover:!text-white transition-all duration-[250ms] ${isActive ? 'text-white' : 'text-gray-400'}`}>
                                                     <PlayIcon aria-hidden="true" />
@@ -88,18 +97,18 @@ const Pages = ({ user }) => {
 
 
                                     <NavLink
-                                        
+
                                         to="/profile"
                                         className={({ isActive }) =>
-                                            
+
                                             `${commonClasses} ${isActive ? activeClasses : ""}`
                                         }
                                         onClick={() => setIsOpen(false)}
                                         aria-current="page"
                                     >
-                                        {({isActive}) => (
+                                        {({ isActive }) => (
                                             <>
-                                            {console.log(isActive)}
+                                                {/* {console.log(isActive)} */}
                                                 <div className={`mr-4 h-6 w-6 text-gray-700 group-hover:!text-white transition-all duration-[250ms] ${isActive ? 'text-white' : 'text-gray-400'}`}>
                                                     <UserIcon aria-hidden="true" />
                                                 </div>
@@ -117,7 +126,7 @@ const Pages = ({ user }) => {
                                         aria-current="page"
                                         onClick={() => setIsOpen(false)}
                                     >
-                                        {({isActive}) => (
+                                        {({ isActive }) => (
                                             <>
                                                 <div className={`mr-4 h-6 w-6 text-gray-700 group-hover:!text-white transition-all duration-[250ms] ${isActive ? 'text-white' : 'text-gray-400'}`}>
                                                     <MenuIcon aria-hidden="true" />
@@ -126,27 +135,80 @@ const Pages = ({ user }) => {
                                             </>
                                         )}
                                     </NavLink>
-{/* 
-                                    <NavLink
-                                        exact
-                                        to="/profile/queue"
-                                        className={({ isActive }) =>
+                                    <div className="w-full">
+                                        <NavLink to="/admin" className={({ isActive }) =>
                                             `${commonClasses} ${isActive ? activeClasses : ""}`
-                                        }
-                                        aria-current="page"
-                                        onClick={() => setIsOpen(false)}
-                                    >
-                                        {({isActive}) => (
-                                            <>
-                                                <div className={`mr-4 h-6 w-6 text-gray-700 group-hover:!text-white transition-all duration-[250ms] ${isActive ? 'text-white' : 'text-gray-400'}`}>
-                                                    <BadgeCheckIcon aria-hidden="true" />
+                                        } type="button" onClick={() => setIsOpen(!isOpen)}>
+                                            <div className="flex items-center">
+                                                <div className="mr-4 h-6 w-6 ">
+                                                    <ShieldCheckIcon aria-hidden="true" />
                                                 </div>
-                                                Queue
-                                            </>
-                                        )}
-                                    </NavLink> */}
+                                                <span className="">Admin Panel</span>
+                                            </div>
+                                            <div className={`${isOpen ? 'rotate-180' : ''} ml-auto h-6 w-6 transition-all `}>
+                                                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                                                </svg>
+                                            </div>
+                                        </NavLink>
+                                        <div className={`transition-all duration-[250ms] max-h-0 overflow-hidden ${isOpen ? 'max-h-[500px]' : ''}`}>
+                                            <nav className="flex flex-col gap-1 ml-5 mt-1">
+                                                <NavLink
+                                                    to="/admin/users"
+                                                    className={({ isActive }) =>
+                                                        `${commonClasses} ${isActive ? activeClasses : ""}`
+                                                    }
+                                                    aria-current="page"
+                                                    onClick={() => window.innerWidth < 425 && setIsOpen(false)}
+                                                >
+                                                    {({ isActive }) => (
+                                                        <>
+                                                            <div className={`mr-4 h-6 w-6 text-gray-700 group-hover:!text-white transition-all duration-[250ms] ${isActive ? 'text-white' : 'text-gray-400'}`}>
+                                                                <BadgeCheckIcon aria-hidden="true" />
+                                                            </div>
+                                                            Users
+                                                        </>
+                                                    )}
+                                                </NavLink>
 
+                                                <NavLink
+                                                    to="/admin/mapped-books"
+                                                    className={({ isActive }) =>
+                                                        `${commonClasses} ${isActive ? activeClasses : ""}`
+                                                    }
+                                                    aria-current="page"
+                                                    onClick={() => window.innerWidth < 425 && setIsOpen(false)}
+                                                >
+                                                    {({ isActive }) => (
+                                                        <>
+                                                            <div className={`mr-4 h-6 w-6 text-gray-700 group-hover:!text-white transition-all duration-[250ms] ${isActive ? 'text-white' : 'text-gray-400'}`}>
+                                                                <ShieldCheckIcon aria-hidden="true" />
+                                                            </div>
+                                                            Mapped Books
+                                                        </>
+                                                    )}
+                                                </NavLink>
+                                                <NavLink
+                                                    to="/admin/player"
+                                                    className={({ isActive }) =>
+                                                        `${commonClasses} ${isActive ? activeClasses : ""}`
+                                                    }
+                                                    aria-current="page"
+                                                    onClick={() => window.innerWidth < 425 && setIsOpen(false)}
+                                                >
+                                                    {({ isActive }) => (
+                                                        <>
+                                                            <div className={`mr-4 h-6 w-6 text-gray-700 group-hover:!text-white transition-all duration-[250ms] ${isActive ? 'text-white' : 'text-gray-400'}`}>
+                                                                <PlayIcon aria-hidden="true" />
+                                                            </div>
+                                                            Admin Player
+                                                        </>
+                                                    )}
+                                                </NavLink>
 
+                                            </nav>
+                                        </div>
+                                    </div>
 
                                 </nav>
                             </div>
@@ -160,17 +222,46 @@ const Pages = ({ user }) => {
                                 <Routes>
                                     <Route path="/" element={<Feeds user={user} setFeeds={setFeeds} feeds={feeds} />} />
                                     <Route path="/player" element={<Player user={user} />} />
-                                    <Route path="/profile" element={<Profile user={user} setWholeData={setWholeData} wholeData={wholeData} />} />
-                                    <Route path="/profile/queue" element={<QueueBooks user={user} setWholeData={setWholeData} wholeData={wholeData} />} />
 
-                                    <Route path="/mapped-books" element={<MappedBooks user={user} setWholeData={setWholeDataMap} wholeData={wholeDataMap} />} />
+                                    {/* Profile routes */}
+                                    <Route path="/profile" element={<ProfileLayout user={user}>
+                                        <Profile />
+                                    </ProfileLayout>} />
+                                    <Route path="/profile/queue" element={<ProfileLayout user={user}>
+                                        <QueueBooks />
+                                    </ProfileLayout>} />
+                                    <Route path="/profile/my-books" element={<ProfileLayout user={user}>
+                                        <MyBooks />
+                                    </ProfileLayout>} />
+
+
+                                    {/* MappedBooks routes */}
+                                    < Route path="/mapped-books" element={<MappedBooks user={user} setWholeData={setWholeDataMap} wholeData={wholeDataMap} />} />
                                     <Route path="/mapped-books/queue" element={<QueueMappedBooks user={user} setWholeData={setWholeDataMap} wholeData={wholeDataMap} />} />
+
+                                    {/* Admin routes */}
+                                    <Route exact path="/admin" element={<AdminLayout>
+                                        <Admin />
+                                    </AdminLayout>} />
+                                    <Route exact path="/admin/mapped-books" element={<AdminLayout menu={1}>
+                                        <AdminMappedBook />
+                                    </AdminLayout>} />
+                                    <Route exact path="/admin/mapped-books/queue" element={<AdminLayout menu={2}>
+                                        <AdminMappedBooksQueue />
+                                    </AdminLayout>} />
+                                    <Route exact path="/admin/users" element={<AdminLayout menu={3}>
+                                        <AdminUsers />
+                                    </AdminLayout>} />
+
+                                    {/* player */}
+                                    <Route path="admin/player" element={<AdminPlayer user={user} />} />
+
                                 </Routes>
                             </div>
                         </div>
                     </main>
                 </div>
-                
+
             </div>
 
         </>
@@ -178,3 +269,4 @@ const Pages = ({ user }) => {
     )
 }
 export default Pages
+

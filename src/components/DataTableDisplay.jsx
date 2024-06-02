@@ -8,7 +8,7 @@ import { utils, write } from "xlsx";
 
 const DataTableDisplay = ({ data }) => {
     const [specificKeysData, setSpecificKeysData] = useState([]);
-    const [loading, setLoading] = useState(0);
+    const [loading, setLoading] = useState(null);
     const [currentPage, setCurrentPage] = useState(1);
     const [perPage, setPerPage] = useState(10);
     const rowsPerPage = 10;
@@ -39,9 +39,7 @@ const DataTableDisplay = ({ data }) => {
                     let searchResult = searchPDF(pdfText, searchTerm);
                     searchTerm == "" ? searchResult = "" : searchResult;
                     const processedData = [book_name, timeFormator(timestamp), searchTerm, searchResult];
-                    console.log(timestamp)
                     // Update state with the new processed data
-                    console.log(specificKeysData)
                     setSpecificKeysData(prevData => {
                         const updatedData = prevData.some(d => timeFormator(d[1]) === processedData[1]) ?
                             prevData.map(d => timeFormator(d[1]) === processedData[1] ? processedData : d) :
@@ -53,11 +51,12 @@ const DataTableDisplay = ({ data }) => {
                     // update loading bar's width %
                     setLoading(i / timestampsArray.length * 100);
                     // Pause for 300ms before processing the next timestamp
-                    await new Promise(resolve => setTimeout(resolve, 100));
+                    await new Promise(resolve => setTimeout(resolve, 10));
                 }
             }
-            setLoading(false);
+            setLoading(null);
         };
+        // console.log(data)
         fetchData();
     }, [data]);
     // const specificKeysData = data.map(({ timestamps, book_name }) =  > [book_name, timestamps]);
@@ -184,13 +183,13 @@ const DataTableDisplay = ({ data }) => {
                     </div>
                 )}
 
-                <div className="w-full h-[50vh] mt-4">
+                <div className="w-full h-[50vh] mt-4 rounded-lg">
                     <DataTable
                         columns={columns}
                         data={specificKeysData.slice((currentPage - 1) * rowsPerPage, currentPage * rowsPerPage)}
                         pagination
                         paginationServer
-                        paginationTotalRows={data.length}
+                        paginationTotalRows={specificKeysData.length}
                         onChangePage={(currentPage) => setCurrentPage(currentPage)}
                         paginationRowsPerPageOptions={[10, 20, 30]}
                     />
@@ -201,4 +200,7 @@ const DataTableDisplay = ({ data }) => {
 
 };
 
-export default DataTableDisplay;
+export default React.memo(DataTableDisplay, (prevProps, nextProps) => {
+    console.log(prevProps.data[0].id === nextProps.data[0].id)
+    return prevProps.data[0].id === nextProps.data[0].id
+});

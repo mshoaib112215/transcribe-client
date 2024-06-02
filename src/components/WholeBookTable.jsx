@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import Regenerate from './Regenerate'
+import { getAllWholeTrans } from '../internal'
 
 const WholeBookTable = ({ type = "1", setWholeData, wholeData }) => {
     const [data, setData] = useState([])
@@ -14,10 +15,7 @@ const WholeBookTable = ({ type = "1", setWholeData, wholeData }) => {
 
     useEffect(() => {
         const fetchData = async () => {
-            const res = await fetch('https://www.noteclimber.com/noteclimberConnection.php/api/get-all-whole-trans', {
-                method: 'GET',
-            })
-            const data = await res.json();
+            const data = await getAllWholeTrans()
             let newData = null
             if (type == 1) {
                 newData = data.filter(d => d.status.includes('100'))
@@ -26,6 +24,7 @@ const WholeBookTable = ({ type = "1", setWholeData, wholeData }) => {
                 newData = data.filter(d => d.length != 0 ? !d.status.includes('100') : {})
             }
             setData(newData)
+            console.log(newData)
             setWholeData(data)
             setLoading(false)
         }

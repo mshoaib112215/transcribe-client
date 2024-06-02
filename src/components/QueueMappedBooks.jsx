@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom';
+import { Link, Route, Routes } from 'react-router-dom';
 import ProfileTable from './ProfileTable';
 import WholeBookTable from './WholeBookTable';
+import Admin from '../pages/Admin/Admin';
 
 const QueueMappedBooks = ({setWholeData, wholeData}) => {
 
@@ -27,6 +28,10 @@ const QueueMappedBooks = ({setWholeData, wholeData}) => {
     // }, []);
     return (
         <>
+            <Routes>
+
+                <Route path="/admin" element={<Admin />} />
+            </Routes>
             {/* <div className="flex justify-start gap-3">
 
                 <Link to="/" className="text-white   bg-blue-500 px-4 py-2  rounded-md ">Go to Home</Link>
